@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pool Code Translator</title>
+    <style>
+        @font-face {
+            font-family: "Determination Mono";
+            src: url("DTM-Mono.otf") format("opentype");
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        :root {
+            --accent: #ffffff;
+        }
+
+        body {
+            font-family: "Determination Mono", monospace;
+            background: #1a1a1a;
+            color: var(--accent);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            overflow: hidden;
+            gap: 20px;
+        }
+
+        .terminal {
+            background: #0a0a0a;
+            border: 2px solid var(--accent);
+            padding: 25px;
+            width: 90vw;
+            max-width: 1600px;
+            max-height: 85vh;
+            aspect-ratio: 4 / 3;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        h1 {
+            margin: 0;
+            border-bottom: 1px solid var(--accent);
+            padding-bottom: 8px;
+            flex: 1;
+            min-width: 0;
+            font-size: 1.55em;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-height: 0;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            white-space: nowrap;
+            font-size: 1.2em;
+        }
+        textarea {
+            width: 100%;
+            padding: 14px;
+            background: #000000;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            font-family: "Determination Mono", monospace;
+            box-sizing: border-box;
+            resize: none;
+            flex: 1;
+            min-height: 60px;
+            font-size: 1.35em;
+            line-height: 1.3;
+        }
+        button {
+            font-family: "Determination Mono", monospace;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1.35em;
+        }
+        button:hover {
+            filter: brightness(1.15);
+        }
+
+        /* Button row */
+        .button-row {
+            display: flex;
+            gap: 12px;
+        }
+        #copyButton {
+            flex: 1;
+            padding: 16px;
+            background: var(--accent);
+            color: #000000;
+            border: none;
+        }
+        #clearButton {
+            flex: 1;
+            padding: 16px;
+            background: #000000;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+
+        textarea:focus,
+        button:focus {
+            outline: 1px solid var(--accent);
+            outline-offset: 0;
+        }
+
+        /* Status line */
+        .status-line {
+            font-size: 0.95em;
+            opacity: 0.75;
+            height: 1.4em;
+            margin-bottom: 6px;
+            color: var(--accent);
+            font-family: "Determination Mono", monospace;
+            white-space: nowrap;
+        }
+
+        .lang-switch {
+            display: flex;
+            gap: 8px;
+        }
+        .flag-container {
+            cursor: pointer;
+            padding: 4px;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .flag-container.active {
+            border-color: var(--accent);
+        }
+        .flag-container:hover {
+            transform: scale(1.08);
+        }
+
+        .credits,
+        .twitch {
+            text-align: center;
+            font-size: 0.95em;
+            opacity: 0.85;
+            color: var(--accent);
+        }
+        .credits a,
+        .twitch a {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--accent);
+        }
+        .credits a:hover,
+        .twitch a:hover {
+            opacity: 1;
+            border-bottom-style: solid;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="header">
+            <h1 id="title">* sacr1f1ce & tictac's Pool Code Translator</h1>
+            
+            <div class="lang-switch">
+                <!-- UK Flag -->
+                <div onclick="switchLanguage('en')" id="lang-en" class="flag-container active" title="English">
+                    <svg width="44" height="30" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="image-rendering: pixelated;">
+                        <rect width="60" height="40" fill="#00247D"/>
+                        <path d="M0 0 L60 40" stroke="#fff" stroke-width="8"/>
+                        <path d="M60 0 L0 40" stroke="#fff" stroke-width="8"/>
+                        <path d="M0 0 L60 40" stroke="#CF142B" stroke-width="3.5"/>
+                        <path d="M60 0 L0 40" stroke="#CF142B" stroke-width="3.5"/>
+                        <rect x="26" y="0" width="8" height="40" fill="#fff"/>
+                        <rect x="0" y="16" width="60" height="8" fill="#fff"/>
+                        <rect x="28" y="0" width="4" height="40" fill="#CF142B"/>
+                        <rect x="0" y="18" width="60" height="4" fill="#CF142B"/>
+                    </svg>
+                </div>
+                
+                <!-- Japan Flag -->
+                <div onclick="switchLanguage('ja')" id="lang-ja" class="flag-container" title="日本語">
+                    <svg width="44" height="30" viewBox="0 0 40 30" xmlns="http://www.w3.org/2000/svg" style="image-rendering: pixelated;">
+                        <rect width="40" height="30" fill="#ffffff"/>
+                        <circle cx="20" cy="15" r="9" fill="#e6002b"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="form-group">
+                <label id="message-label" for="inputText">Message:</label>
+                <textarea id="inputText" placeholder="Enter regular text, Pool code, or Morse code..."></textarea>
+            </div>
+
+            <div class="form-group output-label">
+                <label id="output-label" for="outputText">Output:</label>
+                <div id="status" class="status-line"></div>
+                <textarea id="outputText" readonly placeholder="Result appears here"></textarea>
+            </div>
+
+            <!-- Button row -->
+            <div class="button-row">
+                <button id="copyButton">Copy Output</button>
+                <button id="clearButton">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Credits directly below the terminal -->
+    <div class="credits">
+        Made with ❤️ by 
+        <a href="https://linktr.ee/sacr1f1ce" target="_blank" rel="noopener">sacr1f1ce</a> 
+        &amp; 
+        <a href="https://github.com/tictac09" target="_blank" rel="noopener">tictac</a>
+    </div>
+
+    <!-- Twitch -->
+    <div class="twitch">
+        Follow <a href="https://twitch.tv/itboji" target="_blank" rel="noopener">itboji</a> on Twitch!
+    </div>
+
+    <script>
+        // === COMPACT POOL CODE TRANSLATOR ===
+        const inputText = document.getElementById('inputText');
+        const outputText = document.getElementById('outputText');
+        const copyButton = document.getElementById('copyButton');
+        const clearButton = document.getElementById('clearButton');
+        const POOL_PREFIX = 'Splash ';
+
+        const POOL_VERSION = '!';
+        const poolAlphabet = ['-', '/', ':', ';', '@', '"', '.', ',', '?', '!', '\'', '[', ']', '{', '}', '#', '%', '•', '§', '¿', '&', '·', '…', '¡'];
+        const poolBase = BigInt(poolAlphabet.length);
+        const poolCharToValue = new Map(poolAlphabet.map((char, index) => [char, BigInt(index)]));
+
+        const symbolHex = {
+            '0': ')', '1': '!', '2': '@', '3': '#', '4': '"',
+            '5': '%', '6': '.', '7': '&', '8': '§', '9': '(',
+            'a': '-', 'b': '¿', 'c': '{', 'd': '}', 'e': '[', 'f': ']'
+        };
+        const symbolToHex = Object.fromEntries(Object.entries(symbolHex).map(([h, s]) => [s, h]));
+
+        const morseToChar = {
+            '.-': 'A', '-...': 'B', '-.-.': 'C', '-..': 'D', '.': 'E',
+            '..-.': 'F', '--.': 'G', '....': 'H', '..': 'I', '.---': 'J',
+            '-.-': 'K', '.-..': 'L', '--': 'M', '-.': 'N', '---': 'O',
+            '.--.': 'P', '--.-': 'Q', '.-.': 'R', '...': 'S', '-': 'T',
+            '..-': 'U', '...-': 'V', '.--': 'W', '-..-': 'X', '-.--': 'Y',
+            '--..': 'Z', '-----': '0', '.----': '1', '..---': '2', '...--': '3',
+            '....-': '4', '.....': '5', '-....': '6', '--...': '7', '---..': '8',
+            '----.': '9', '.-.-.-': '.', '--..--': ',', '..--..': '?',
+            '.----.': "'", '-.-.--': '!', '-..-.': '/', '-.--.': '(', '-.--.-': ')',
+            '.-...': '&', '---...': ':', '-.-.-.': ';', '-...-': '=', '.-.-.': '+',
+            '-....-': '-', '..--.-': '_', '.-..-.': '"', '...-..-': '$', '.--.-.': '@'
+        };
+
+        function stripPoolPrefix(text) {
+            const trimmedStart = text.trimStart();
+            if (trimmedStart.startsWith(POOL_PREFIX)) return trimmedStart.slice(POOL_PREFIX.length);
+            return text;
+        }
+
+        function isMorseCode(text) {
+            const trimmed = stripPoolPrefix(text).trim();
+            if (!trimmed) return false;
+            const normalized = trimmed.replace(/_/g, '-');
+            if (!/^[.\-/\s]+$/.test(normalized)) return false;
+            const words = normalized.split('/').map(w => w.trim()).filter(Boolean);
+            if (!words.length) return false;
+            return words.every(word => {
+                const letters = word.split(/\s+/).filter(Boolean);
+                return letters.length > 0 && letters.every(letter => letter in morseToChar);
+            });
+        }
+
+        function isOldPoolCode(text) {
+            const trimmed = stripPoolPrefix(text).trim();
+            if (!trimmed) return false;
+            const tokens = trimmed.split(/\s+/);
+            return tokens.every(token => token.length === 2 && token.split('').every(char => char in symbolToHex));
+        }
+
+        function hasOnlyPoolAlphabetChars(text) {
+            return Array.from(text).every(char => poolCharToValue.has(char));
+        }
+
+        function numberToPoolBase(number) {
+            if (number === 0n) return poolAlphabet[0];
+            let remaining = number;
+            let encoded = '';
+            while (remaining > 0n) {
+                const index = Number(remaining % poolBase);
+                encoded = poolAlphabet[index] + encoded;
+                remaining /= poolBase;
+            }
+            return encoded;
+        }
+
+        function poolBaseToNumber(text) {
+            return Array.from(text).reduce((number, char) => number * poolBase + poolCharToValue.get(char), 0n);
+        }
+
+        function bytesToNumber(bytes) {
+            return bytes.reduce((number, byte) => number * 256n + BigInt(byte), 0n);
+        }
+
+        function numberToBytes(number, byteLength) {
+            const bytes = new Uint8Array(byteLength);
+            let remaining = number;
+            for (let i = byteLength - 1; i >= 0; i--) {
+                bytes[i] = Number(remaining % 256n);
+                remaining /= 256n;
+            }
+            return bytes;
+        }
+
+        function isPoolCode(text) {
+            const trimmed = stripPoolPrefix(text).trim();
+            if (!trimmed) return false;
+            const parts = trimmed.split(/\s+/);
+            return parts.length === 3 && parts[0] === POOL_VERSION && parts.slice(1).every(hasOnlyPoolAlphabetChars);
+        }
+
+        function encodePoolCode(text) {
+            const bytes = new TextEncoder().encode(text);
+            const byteLength = numberToPoolBase(BigInt(bytes.length));
+            const payload = numberToPoolBase(bytesToNumber(Array.from(bytes)));
+            return `${POOL_PREFIX}${POOL_VERSION} ${byteLength} ${payload}`;
+        }
+
+        function decodeOldPoolCode(text) {
+            const tokens = stripPoolPrefix(text).trim().split(/\s+/);
+            const hexString = tokens.map(token => token.split('').map(char => symbolToHex[char]).join('')).join('');
+            const bytes = new Uint8Array(hexString.match(/.{2}/g).map(pair => parseInt(pair, 16)));
+            return new TextDecoder().decode(bytes);
+        }
+
+        function decodePoolCode(text) {
+            const [, byteLengthText, payloadText] = stripPoolPrefix(text).trim().split(/\s+/);
+            const byteLength = Number(poolBaseToNumber(byteLengthText));
+            const payload = poolBaseToNumber(payloadText);
+            const bytes = numberToBytes(payload, byteLength);
+            return new TextDecoder().decode(bytes);
+        }
+
+        function decodeMorseCode(text) {
+            const normalized = stripPoolPrefix(text).trim().replace(/_/g, '-');
+            const words = normalized.split('/').map(w => w.trim()).filter(Boolean);
+            return words.map(word => word.split(/\s+/).map(letter => morseToChar[letter]).join('')).join(' ');
+        }
+
+        function updateStatus(mode) {
+            const statusEl = document.getElementById('status');
+            if (!statusEl) return;
+            
+            if (mode === 'encode') {
+                statusEl.textContent = '→ Encoded to new Pool Code';
+            } else if (mode === 'old-pool') {
+                statusEl.textContent = '→ Decoded from old Pool Code';
+            } else if (mode === 'pool') {
+                statusEl.textContent = '→ Decoded from new Pool Code';
+            } else if (mode === 'morse') {
+                statusEl.textContent = '→ Decoded from Morse Code';
+            } else {
+                statusEl.textContent = '';
+            }
+        }
+
+        function convert() {
+            const text = inputText.value;
+            if (!text.trim()) {
+                outputText.value = '';
+                updateStatus('');
+                return;
+            }
+
+            if (isOldPoolCode(text)) {
+                outputText.value = decodeOldPoolCode(text);
+                updateStatus('old-pool');
+            } else if (isPoolCode(text)) {
+                outputText.value = decodePoolCode(text);
+                updateStatus('pool');
+            } else if (isMorseCode(text)) {
+                outputText.value = decodeMorseCode(text);
+                updateStatus('morse');
+            } else {
+                outputText.value = encodePoolCode(text);
+                updateStatus('encode');
+            }
+        }
+
+        async function copyOutput() {
+            if (!outputText.value) return;
+            try {
+                await navigator.clipboard.writeText(outputText.value);
+                copyButton.textContent = 'Splash!';
+                setTimeout(() => { copyButton.textContent = 'Copy Output'; }, 1200);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function clearAll() {
+            inputText.value = '';
+            outputText.value = '';
+            updateStatus('');
+            inputText.focus();
+        }
+
+        // Translations (no version, no >)
+        const translations = {
+            en: {
+                title: "* sacr1f1ce & tictac's Pool Code Translator",
+                messageLabel: "Message:",
+                outputLabel: "Output:",
+                inputPlaceholder: "Enter regular text, Pool code, or Morse code...",
+                outputPlaceholder: "Result appears here",
+                copyButton: "Copy Output",
+                clearButton: "Clear"
+            },
+            ja: {
+                title: "* sacr1f1ce & tictacのPoolコード翻訳機",
+                messageLabel: "メッセージ:",
+                outputLabel: "出力:",
+                inputPlaceholder: "通常のテキスト、Poolコード、またはモールス信号を入力...",
+                outputPlaceholder: "結果がここに表示されます",
+                copyButton: "出力をコピー",
+                clearButton: "クリア"
+            }
+        };
+
+        let currentLang = 'en';
+
+        function applyTheme(lang) {
+            const accent = lang === 'en' ? '#ffffff' : '#93b9e8';
+            document.documentElement.style.setProperty('--accent', accent);
+        }
+
+        function switchLanguage(lang) {
+            currentLang = lang;
+            document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+            document.getElementById('lang-ja').classList.toggle('active', lang === 'ja');
+            
+            const t = translations[lang];
+            document.getElementById('title').textContent = t.title;
+
+            document.getElementById('message-label').textContent = t.messageLabel;
+            document.getElementById('output-label').textContent = t.outputLabel;
+            inputText.placeholder = t.inputPlaceholder;
+            outputText.placeholder = t.outputPlaceholder;
+            copyButton.textContent = t.copyButton;
+            clearButton.textContent = t.clearButton;
+
+            applyTheme(lang);
+        }
+
+        // Event listeners
+        copyButton.addEventListener('click', copyOutput);
+        clearButton.addEventListener('click', clearAll);
+        inputText.addEventListener('input', convert);
+
+        // Initialize
+        convert();
+        applyTheme('en');
+    </script>
+</body>
+</html>
