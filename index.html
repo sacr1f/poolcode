@@ -218,16 +218,16 @@
         </div>
     </div>
 
-    <!-- Credits directly below the terminal -->
-    <div class="credits">
+    <!-- Credits (now bilingual) -->
+    <div class="credits" id="credits">
         Made with ❤️ by 
         <a href="https://linktr.ee/sacr1f1ce" target="_blank" rel="noopener">sacr1f1ce</a> 
         &amp; 
         <a href="https://github.com/tictac09" target="_blank" rel="noopener">tictac</a>
     </div>
 
-    <!-- Twitch -->
-    <div class="twitch">
+    <!-- Twitch (now bilingual) -->
+    <div class="twitch" id="twitch">
         Follow <a href="https://twitch.tv/itboji" target="_blank" rel="noopener">itboji</a> on Twitch!
     </div>
 
@@ -395,7 +395,7 @@
             inputText.focus();
         }
 
-        // Translations (no version, no >)
+        // Translations (now including credits and Twitch)
         const translations = {
             en: {
                 title: "* sacr1f1ce & tictac's Pool Code Translator",
@@ -404,16 +404,20 @@
                 inputPlaceholder: "Enter regular text, Pool code, or Morse code…",
                 outputPlaceholder: "Result appears here",
                 copyButton: "Copy Output",
-                clearButton: "Clear"
+                clearButton: "Clear",
+                credits: `Made with ❤️ by <a href="https://linktr.ee/sacr1f1ce" target="_blank" rel="noopener">sacr1f1ce</a> &amp; <a href="https://github.com/tictac09" target="_blank" rel="noopener">tictac</a>`,
+                twitch: `Follow <a href="https://twitch.tv/itboji" target="_blank" rel="noopener">itboji</a> on Twitch!`
             },
             ja: {
-                title: "* sacr1f1ce & tictacのPoolコード翻訳機",
+                title: "* sacr1f1ce & tictacのプールコード翻訳機",
                 messageLabel: "メッセージ:",
                 outputLabel: "出力:",
                 inputPlaceholder: "通常のテキスト、Poolコード、またはモールス信号を入力……",
                 outputPlaceholder: "結果がここに表示されます",
                 copyButton: "出力をコピー",
-                clearButton: "クリア"
+                clearButton: "クリア",
+                credits: `❤️ で作られた <a href="https://linktr.ee/sacr1f1ce" target="_blank" rel="noopener">sacr1f1ce</a> &amp; <a href="https://github.com/tictac09" target="_blank" rel="noopener">tictac</a>`,
+                twitch: `Twitchで <a href="https://twitch.tv/itboji" target="_blank" rel="noopener">itboji</a> をフォロー！`
             }
         };
 
@@ -439,6 +443,10 @@
             copyButton.textContent = t.copyButton;
             clearButton.textContent = t.clearButton;
 
+            // Update credits and Twitch with full localized HTML
+            document.getElementById('credits').innerHTML = t.credits;
+            document.getElementById('twitch').innerHTML = t.twitch;
+
             applyTheme(lang);
         }
 
@@ -452,3 +460,4 @@
         applyTheme('en');
     </script>
 </body>
+</html>
