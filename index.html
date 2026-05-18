@@ -127,17 +127,6 @@
             outline-offset: 0;
         }
 
-        /* Status line */
-        .status-line {
-            font-size: 0.95em;
-            opacity: 0.75;
-            height: 1.4em;
-            margin-bottom: 6px;
-            color: var(--accent);
-            font-family: "Determination Mono", monospace;
-            white-space: nowrap;
-        }
-
         .lang-switch {
             display: flex;
             gap: 8px;
@@ -218,7 +207,6 @@
 
             <div class="form-group output-label">
                 <label id="output-label" for="outputText">Output:</label>
-                <div id="status" class="status-line"></div>
                 <textarea id="outputText" readonly placeholder="Result appears here"></textarea>
             </div>
 
@@ -372,43 +360,21 @@
             return words.map(word => word.split(/\s+/).map(letter => morseToChar[letter]).join('')).join(' ');
         }
 
-        function updateStatus(mode) {
-            const statusEl = document.getElementById('status');
-            if (!statusEl) return;
-            
-            if (mode === 'encode') {
-                statusEl.textContent = '→ Encoded to new Pool Code';
-            } else if (mode === 'old-pool') {
-                statusEl.textContent = '→ Decoded from old Pool Code';
-            } else if (mode === 'pool') {
-                statusEl.textContent = '→ Decoded from new Pool Code';
-            } else if (mode === 'morse') {
-                statusEl.textContent = '→ Decoded from Morse Code';
-            } else {
-                statusEl.textContent = '';
-            }
-        }
-
         function convert() {
             const text = inputText.value;
             if (!text.trim()) {
                 outputText.value = '';
-                updateStatus('');
                 return;
             }
 
             if (isOldPoolCode(text)) {
                 outputText.value = decodeOldPoolCode(text);
-                updateStatus('old-pool');
             } else if (isPoolCode(text)) {
                 outputText.value = decodePoolCode(text);
-                updateStatus('pool');
             } else if (isMorseCode(text)) {
                 outputText.value = decodeMorseCode(text);
-                updateStatus('morse');
             } else {
                 outputText.value = encodePoolCode(text);
-                updateStatus('encode');
             }
         }
 
@@ -426,7 +392,6 @@
         function clearAll() {
             inputText.value = '';
             outputText.value = '';
-            updateStatus('');
             inputText.focus();
         }
 
@@ -487,4 +452,3 @@
         applyTheme('en');
     </script>
 </body>
-</html>
