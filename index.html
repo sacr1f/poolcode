@@ -40,6 +40,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            position: relative;
         }
 
         .header {
@@ -47,7 +48,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 18px;
-            min-height: 52px;           /* locked height - no shift */
+            min-height: 52px;
             flex-wrap: wrap;
             gap: 12px;
         }
@@ -174,9 +175,9 @@
             transform: scale(1.08);
         }
 
-        /* Bottom section with fixed height to prevent any vertical shift */
+        /* Fixed bottom section */
         .bottom-section {
-            min-height: 82px;           /* enough for both English and Japanese */
+            min-height: 82px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -202,12 +203,14 @@
             border-bottom-style: solid;
         }
 
-        /* Modal */
+        /* Modal - restored darkening (exactly as it was) + centered inside terminal */
         .modal {
             display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(0,0,0,0.85);
             z-index: 1000;
             align-items: center;
@@ -283,7 +286,7 @@
         </div>
     </div>
 
-    <!-- Bottom section with fixed height so terminal never moves -->
+    <!-- Bottom section -->
     <div class="bottom-section">
         <div class="credits" id="credits">
             Made with ❤️ by 
@@ -301,7 +304,7 @@
     <div id="infoModal" class="modal">
         <div class="modal-content">
             <button onclick="closeModal()" class="modal-close">×</button>
-            <h2 id="modalTitle">About Pool Code Translator</h2>
+            <h2 id="modalTitle"></h2>
             <div id="modalBody"></div>
         </div>
     </div>
@@ -320,19 +323,14 @@
         const DISCORD_PREFIX_WITH_POOL_PATTERN = /(?:^|[\r\n])\[[^\]\r\n]+\][^\r\n]*?:\s*splash /i;
         const DISCORD_LINE_PATTERN = /^(\[[^\]\r\n]+\])\s*([^:\r\n]+:)(.*)$/;
 
-        const CUSTOM_USERNAME_COLORS = {
-          TicTac09: '#d66420'
-        };
+        const CUSTOM_USERNAME_COLORS = { TicTac09: '#d66420' };
 
         const symbolHex = {
           '0': ')', '1': '!', '2': '@', '3': '#', '4': '"',
           '5': '%', '6': '.', '7': '&', '8': '§', '9': '(',
           'a': '-', 'b': '¿', 'c': '{', 'd': '}', 'e': '[', 'f': ']'
         };
-
-        const symbolToHex = Object.fromEntries(
-          Object.entries(symbolHex).map(([hex, symbol]) => [symbol, hex])
-        );
+        const symbolToHex = Object.fromEntries(Object.entries(symbolHex).map(([h,s])=>[s,h]));
 
         const poolAlphabet = ['-', '/', ':', ';', '@', '"', '.', ',', '?', '!', '\'', '[', ']', '{', '}', '#', '%', '•', '§', '¿', '&', '·', '…', '¡'];
         const poolBase = BigInt(poolAlphabet.length);
@@ -376,22 +374,18 @@
 
         function isOldPoolCode(text) {
           const tokens = splitWords(stripPoolPrefix(text));
-          return tokens.length > 0
-            && tokens.every((token) => token.length === 2 && Array.from(token).every((char) => char in symbolToHex));
+          return tokens.length > 0 && tokens.every((token) => token.length === 2 && Array.from(token).every((char) => char in symbolToHex));
         }
 
         function isPoolCode(text) {
           const parts = splitWords(stripPoolPrefix(text));
-          return parts.length === 3
-            && parts[0] === POOL_VERSION
-            && parts.slice(1).every(hasOnlyPoolAlphabetChars);
+          return parts.length === 3 && parts[0] === POOL_VERSION && parts.slice(1).every(hasOnlyPoolAlphabetChars);
         }
 
         function isMorseCode(text) {
           const normalized = stripPoolPrefix(text).trim().replace(/_/g, '-');
           if (!normalized || !/^[.\-/\s]+$/.test(normalized)) return false;
-
-          const words = normalized.split('/').map((word) => word.trim()).filter(Boolean);
+          const words = normalized.split('/').map(w => w.trim()).filter(Boolean);
           return words.length > 0 && words.every((word) => {
             const letters = splitWords(word);
             return letters.length > 0 && letters.every((letter) => letter in morseToChar);
@@ -400,7 +394,6 @@
 
         function numberToPoolBase(number) {
           if (number === 0n) return poolAlphabet[0];
-
           let remaining = number;
           let encoded = '';
           while (remaining > 0n) {
@@ -412,11 +405,7 @@
         }
 
         function poolBaseToNumber(text) {
-          return Array.from(text).reduce((number, char) => {
-            const value = poolCharToValue.get(char);
-            if (value === undefined) throw new Error(`Invalid Pool Code character: ${char}`);
-            return number * poolBase + value;
-          }, 0n);
+          return Array.from(text).reduce((number, char) => number * poolBase + poolCharToValue.get(char), 0n);
         }
 
         function bytesToNumber(bytes) {
@@ -424,13 +413,11 @@
         }
 
         function numberToBytes(number, byteLength) {
-          if (!Number.isSafeInteger(byteLength) || byteLength < 0) {
-            throw new Error('Encoded byte length is invalid.');
-          }
+          if (!Number.isSafeInteger(byteLength) || byteLength < 0) throw new Error('Encoded byte length is invalid.');
           const bytes = new Uint8Array(byteLength);
           let remaining = number;
-          for (let index = byteLength - 1; index >= 0; index -= 1) {
-            bytes[index] = Number(remaining % 256n);
+          for (let i = byteLength - 1; i >= 0; i--) {
+            bytes[i] = Number(remaining % 256n);
             remaining /= 256n;
           }
           if (remaining > 0n) throw new Error('Encoded payload is too large for its byte length.');
@@ -566,11 +553,8 @@
           outputText.replaceChildren();
           if (!text) return;
           text.split(LINE_BREAK_PATTERN).forEach((part) => {
-            if (LINE_BREAK_PATTERN.test(part)) {
-              outputText.append(document.createTextNode(part));
-            } else {
-              appendOutputLine(part);
-            }
+            if (LINE_BREAK_PATTERN.test(part)) outputText.append(document.createTextNode(part));
+            else appendOutputLine(part);
           });
         }
 
@@ -620,10 +604,11 @@
                 credits: `Made with ❤️ by <a href="https://linktr.ee/sacr1f1ce" target="_blank" rel="noopener">sacr1f1ce</a> &amp; <a href="https://github.com/tictac09" target="_blank" rel="noopener">tictac</a>`,
                 twitch: `Follow <a href="https://twitch.tv/itboji" target="_blank" rel="noopener">itboji</a> on Twitch!`,
                 modalTitle: "About Pool Code Translator",
-                modalBody: `<p>This tool automatically converts between normal text, Pool Code, and Morse code.</p>
-                            <p><strong>New in v1.1:</strong> Much shorter Pool codes (≈20% shorter) while staying fully compatible with old codes.</p>
-                            <p>Just type or paste anything — it will detect and convert automatically.</p>
-                            <p>Also supports Discord chat logs with timestamps and colored usernames.</p>`
+                modalBody: `<p>This tool automatically converts between normal text and Pool Code. It can also decode Morse code, making it easy to read older messages from the pool.</p>
+                            <p>Just type or paste anything — it will detect the format and convert automatically.</p>
+                            <p>It also supports Discord chat logs. Copy and paste multiple messages at once and they will all be decoded.</p>
+                            <p>Any issues, feel free to DM .sacr1f1ce.</p>
+                            <p>Happy splashing!</p>`
             },
             ja: {
                 title: "* sacr1f1ce & tictacのプールコード翻訳機",
@@ -635,11 +620,12 @@
                 clearButton: "クリア",
                 credits: `❤️ で作られた <a href="https://linktr.ee/sacr1f1ce" target="_blank" rel="noopener">sacr1f1ce</a> &amp; <a href="https://github.com/tictac09" target="_blank" rel="noopener">tictac</a>`,
                 twitch: `Twitchで <a href="https://twitch.tv/itboji" target="_blank" rel="noopener">itboji</a> をフォロー！`,
-                modalTitle: "Pool Code Translator について",
-                modalBody: `<p>このツールは通常のテキスト、Pool Code、モールス信号を自動で変換します。</p>
-                            <p><strong>v1.1の新機能:</strong> Pool Codeが約20%短くなりました（古い形式も完全に互換性があります）。</p>
-                            <p>何でも入力するだけで自動検出・変換されます。</p>
-                            <p>Discordのチャットログ（タイムスタンプと色付きユーザー名対応）もサポートしています。</p>`
+                modalTitle: "Poolコード翻訳機について",
+                modalBody: `<p>このツールは通常のテキストとPoolコードを自動で変換します。また、モールス信号のデコードも可能なので、古いPoolのメッセージも簡単に読めます。</p>
+                            <p>何でも入力したり貼り付けたりするだけで、形式を自動検出して変換します。</p>
+                            <p>Discordのチャットログにも対応しています。一度に複数のメッセージをコピー＆ペーストすると、すべてデコードされます。</p>
+                            <p>何か問題があれば、.sacr1f1ceまでDMしてください。</p>
+                            <p>Happy splashing!</p>`
             }
         };
 
