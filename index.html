@@ -339,6 +339,7 @@
         const LINE_BREAK_PATTERN = /(\r\n|\n|\r)/;
         const DISCORD_PREFIX_WITH_POOL_PATTERN = /(?:^|[\r\n])\[[^\]\r\n]+\][^\r\n]*?:\s*splash /i;
         const DISCORD_LINE_PATTERN = /^(\[[^\]\r\n]+\])\s*([^:\r\n]+:)(.*)$/;
+        const DISCORD_BADGE_ONLY_LINE_PATTERN = /^\s*(?:\[[^\]\r\n]+\],\s*)+$/;
 
         const CUSTOM_USERNAME_COLORS = {
           TicTac09: '#d66420'
@@ -536,6 +537,10 @@
           return DISCORD_PREFIX_WITH_POOL_PATTERN.test(text);
         }
 
+        function isDiscordBadgeOnlyLine(line) {
+          return DISCORD_BADGE_ONLY_LINE_PATTERN.test(line);
+        }
+
         function normalizeDiscordUsername(username) {
           const usernameWithoutColon = username.trim().replace(/:$/, '').trim();
           const usernameWithoutBadges = usernameWithoutColon.replace(/\s+\[[^\]\r\n]+\],/g, '').trim();
@@ -563,17 +568,29 @@
         }
 
         function convertDiscordChatLog(text) {
-          const shouldTryChatLog = LINE_BREAK_PATTERN.test(text) || hasDiscordPrefixBeforePool(text);
+          const shouldTryChatLog = LINE_BREAK_PATTERN.test(text) || hasDiscordPrefixBeforePool(text) || isDiscordBadgeOnlyLine(text);
           if (!shouldTryChatLog) return null;
 
           let decodedAny = false;
-          const converted = text.split(LINE_BREAK_PATTERN).map((part) => {
-            if (LINE_BREAK_PATTERN.test(part)) return part;
-            const result = convertDiscordLine(part);
+          let ignoredAny = false;
+          const parts = text.split(LINE_BREAK_PATTERN);
+          const converted = [];
+
+          for (let index = 0; index < parts.length; index += 2) {
+            const line = parts[index];
+            const lineBreak = parts[index + 1] || '';
+
+            if (isDiscordBadgeOnlyLine(line)) {
+              ignoredAny = true;
+              continue;
+            }
+
+            const result = convertDiscordLine(line);
             decodedAny = decodedAny || result.decoded;
-            return result.text;
-          }).join('');
-          return decodedAny ? converted : null;
+            converted.push(result.text, lineBreak);
+          }
+
+          return decodedAny || ignoredAny ? converted.join('') : null;
         }
 
         function hslToHex(h, s, l) {
