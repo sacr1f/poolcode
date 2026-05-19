@@ -40,7 +40,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            position: relative;
+            position: relative;           /* NEW: allows modal to be centered inside terminal */
         }
 
         .header {
@@ -175,7 +175,7 @@
             transform: scale(1.08);
         }
 
-        /* Fixed bottom section */
+        /* Fixed bottom section so terminal never moves */
         .bottom-section {
             min-height: 82px;
             display: flex;
@@ -203,10 +203,10 @@
             border-bottom-style: solid;
         }
 
-        /* Modal - restored darkening (exactly as it was) + centered inside terminal */
+        /* Modal - now centered vertically INSIDE the terminal */
         .modal {
             display: none;
-            position: absolute;
+            position: absolute;           /* changed to absolute relative to .terminal */
             top: 0;
             left: 0;
             width: 100%;
@@ -284,9 +284,18 @@
                 <button id="clearButton">Clear</button>
             </div>
         </div>
+
+        <!-- Info Modal - now inside terminal so it centers vertically within it -->
+        <div id="infoModal" class="modal">
+            <div class="modal-content">
+                <button onclick="closeModal()" class="modal-close">×</button>
+                <h2 id="modalTitle"></h2>
+                <div id="modalBody"></div>
+            </div>
+        </div>
     </div>
 
-    <!-- Bottom section -->
+    <!-- Bottom section with fixed height so terminal never moves -->
     <div class="bottom-section">
         <div class="credits" id="credits">
             Made with ❤️ by 
@@ -297,15 +306,6 @@
 
         <div class="twitch" id="twitch">
             Follow <a href="https://twitch.tv/itboji" target="_blank" rel="noopener">itboji</a> on Twitch!
-        </div>
-    </div>
-
-    <!-- Info Modal -->
-    <div id="infoModal" class="modal">
-        <div class="modal-content">
-            <button onclick="closeModal()" class="modal-close">×</button>
-            <h2 id="modalTitle"></h2>
-            <div id="modalBody"></div>
         </div>
     </div>
 
@@ -323,14 +323,19 @@
         const DISCORD_PREFIX_WITH_POOL_PATTERN = /(?:^|[\r\n])\[[^\]\r\n]+\][^\r\n]*?:\s*splash /i;
         const DISCORD_LINE_PATTERN = /^(\[[^\]\r\n]+\])\s*([^:\r\n]+:)(.*)$/;
 
-        const CUSTOM_USERNAME_COLORS = { TicTac09: '#d66420' };
+        const CUSTOM_USERNAME_COLORS = {
+          TicTac09: '#d66420'
+        };
 
         const symbolHex = {
           '0': ')', '1': '!', '2': '@', '3': '#', '4': '"',
           '5': '%', '6': '.', '7': '&', '8': '§', '9': '(',
           'a': '-', 'b': '¿', 'c': '{', 'd': '}', 'e': '[', 'f': ']'
         };
-        const symbolToHex = Object.fromEntries(Object.entries(symbolHex).map(([h,s])=>[s,h]));
+
+        const symbolToHex = Object.fromEntries(
+          Object.entries(symbolHex).map(([hex, symbol]) => [symbol, hex])
+        );
 
         const poolAlphabet = ['-', '/', ':', ';', '@', '"', '.', ',', '?', '!', '\'', '[', ']', '{', '}', '#', '%', '•', '§', '¿', '&', '·', '…', '¡'];
         const poolBase = BigInt(poolAlphabet.length);
@@ -385,7 +390,8 @@
         function isMorseCode(text) {
           const normalized = stripPoolPrefix(text).trim().replace(/_/g, '-');
           if (!normalized || !/^[.\-/\s]+$/.test(normalized)) return false;
-          const words = normalized.split('/').map(w => w.trim()).filter(Boolean);
+
+          const words = normalized.split('/').map((word) => word.trim()).filter(Boolean);
           return words.length > 0 && words.every((word) => {
             const letters = splitWords(word);
             return letters.length > 0 && letters.every((letter) => letter in morseToChar);
@@ -394,6 +400,7 @@
 
         function numberToPoolBase(number) {
           if (number === 0n) return poolAlphabet[0];
+
           let remaining = number;
           let encoded = '';
           while (remaining > 0n) {
@@ -405,7 +412,11 @@
         }
 
         function poolBaseToNumber(text) {
-          return Array.from(text).reduce((number, char) => number * poolBase + poolCharToValue.get(char), 0n);
+          return Array.from(text).reduce((number, char) => {
+            const value = poolCharToValue.get(char);
+            if (value === undefined) throw new Error(`Invalid Pool Code character: ${char}`);
+            return number * poolBase + value;
+          }, 0n);
         }
 
         function bytesToNumber(bytes) {
@@ -416,8 +427,8 @@
           if (!Number.isSafeInteger(byteLength) || byteLength < 0) throw new Error('Encoded byte length is invalid.');
           const bytes = new Uint8Array(byteLength);
           let remaining = number;
-          for (let i = byteLength - 1; i >= 0; i--) {
-            bytes[i] = Number(remaining % 256n);
+          for (let index = byteLength - 1; index >= 0; index -= 1) {
+            bytes[index] = Number(remaining % 256n);
             remaining /= 256n;
           }
           if (remaining > 0n) throw new Error('Encoded payload is too large for its byte length.');
@@ -591,7 +602,7 @@
           }
         }
 
-        // Translations
+        // Translations (unchanged - uses your latest text)
         const translations = {
             en: {
                 title: "* sacr1f1ce & tictac's Pool Code Translator",
