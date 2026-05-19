@@ -118,7 +118,6 @@
             filter: brightness(1.15);
         }
 
-        /* Button row */
         .button-row {
             display: flex;
             gap: 12px;
@@ -145,9 +144,7 @@
             outline-offset: 0;
         }
 
-        /* Circular buttons (info + new ohyes button) */
-        .info-button,
-        .ohyes-button {
+        .info-button {
             background: transparent;
             border: 2px solid var(--accent);
             border-radius: 50%;
@@ -162,8 +159,7 @@
             flex-shrink: 0;
             font-weight: bold;
         }
-        .info-button:hover,
-        .ohyes-button:hover {
+        .info-button:hover {
             background: rgba(255,255,255,0.1);
             transform: scale(1.08);
         }
@@ -189,7 +185,6 @@
             transform: scale(1.08);
         }
 
-        /* Fixed bottom section so terminal never moves */
         .bottom-section {
             min-height: 82px;
             display: flex;
@@ -217,7 +212,6 @@
             border-bottom-style: solid;
         }
 
-        /* Modal - now centered vertically INSIDE the terminal */
         .modal {
             display: none;
             position: absolute;
@@ -256,11 +250,7 @@
         <div class="header">
             <h1 id="title">* sacr1f1ce & tictac's Pool Code Translator</h1>
             
-            <!-- Info button -->
             <button id="infoButton" class="info-button" title="Info">i</button>
-            
-            <!-- New ohyes button -->
-            <button id="playOhYesButton" class="ohyes-button" title="Play ohyes.mp3">♪</button>
             
             <div class="lang-switch">
                 <div onclick="switchLanguage('en')" id="lang-en" class="flag-container active" title="English">
@@ -303,7 +293,6 @@
             </div>
         </div>
 
-        <!-- Info Modal -->
         <div id="infoModal" class="modal">
             <div class="modal-content">
                 <button onclick="closeModal()" class="modal-close">×</button>
@@ -313,7 +302,6 @@
         </div>
     </div>
 
-    <!-- Bottom section -->
     <div class="bottom-section">
         <div class="credits" id="credits">
             Made with ❤️ by 
@@ -327,8 +315,8 @@
         </div>
     </div>
 
-    <!-- Audio for ohyes.mp3 -->
-    <audio id="ohyesAudio" src="ohyes.mp3" preload="auto"></audio>
+    <!-- Hidden audio element for the Konami code easter egg -->
+    <audio id="ohYesAudio" src="ohyes.mp3" preload="auto"></audio>
 
     <script>
         // === TICTAC'S ADVANCED CODE ===
@@ -706,45 +694,55 @@
             document.getElementById('infoModal').style.display = 'none';
         }
 
-        // ========================
-        // OHYES AUDIO + BUTTON + KONAMI
-        // ========================
-        const ohyesAudio = document.getElementById('ohyesAudio');
-
-        function playOhYes() {
-            if (ohyesAudio) {
-                ohyesAudio.currentTime = 0;
-                ohyesAudio.play().catch(err => {
-                    console.log('Could not play ohyes.mp3', err);
-                });
-            }
-        }
-
-        // New button
-        const playOhYesButton = document.getElementById('playOhYesButton');
-        playOhYesButton.addEventListener('click', playOhYes);
-
-        // Konami Code (still works)
-        const konamiCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','KeyB','KeyA'];
-        let konamiIndex = 0;
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === konamiCode[konamiIndex]) {
-                konamiIndex++;
-                if (konamiIndex === konamiCode.length) {
-                    playOhYes();
-                    konamiIndex = 0;
-                }
-            } else {
-                konamiIndex = 0;
-            }
-        });
-
         // Event listeners
         copyButton.addEventListener('click', copyOutput);
         clearButton.addEventListener('click', clearAll);
         inputText.addEventListener('input', convert);
         document.getElementById('infoButton').addEventListener('click', showInfo);
+
+        // === KONAMI CODE EASTER EGG ===
+        // ↑ ↑ ↓ ↓ ← → ← → B A
+        const konamiSequence = [
+            'ArrowUp', 'ArrowUp',
+            'ArrowDown', 'ArrowDown',
+            'ArrowLeft', 'ArrowRight',
+            'ArrowLeft', 'ArrowRight',
+            'b', 'a'
+        ];
+        let konamiProgress = 0;
+        const ohYesAudio = document.getElementById('ohYesAudio');
+
+        function playOhYes() {
+            try {
+                ohYesAudio.currentTime = 0;
+                const playPromise = ohYesAudio.play();
+                if (playPromise && typeof playPromise.catch === 'function') {
+                    playPromise.catch((err) => console.warn('Audio playback blocked or failed:', err));
+                }
+            } catch (err) {
+                console.warn('Could not play ohyes.mp3:', err);
+            }
+        }
+
+        document.addEventListener('keydown', (event) => {
+            // Compare arrow keys directly, letters case-insensitively
+            const expected = konamiSequence[konamiProgress];
+            const key = event.key;
+            const isMatch = expected.startsWith('Arrow')
+                ? key === expected
+                : key.toLowerCase() === expected.toLowerCase();
+
+            if (isMatch) {
+                konamiProgress++;
+                if (konamiProgress === konamiSequence.length) {
+                    konamiProgress = 0;
+                    playOhYes();
+                }
+            } else {
+                // Allow restarting if the wrong key was the start of the sequence
+                konamiProgress = (key === konamiSequence[0]) ? 1 : 0;
+            }
+        });
 
         // Initialize
         convert();
