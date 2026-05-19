@@ -108,6 +108,12 @@
             content: attr(data-placeholder);
             opacity: 0.55;
         }
+        .output-error {
+            color: #ff5a5a;
+        }
+        .chat-timestamp {
+            color: #8a8a8a;
+        }
         button {
             font-family: "Determination Mono", monospace;
             font-weight: bold;
@@ -326,7 +332,10 @@
 
         const POOL_PREFIX = 'Splash ';
         const POOL_PREFIX_LOWER = POOL_PREFIX.toLowerCase();
-        const POOL_VERSION = '!';
+        const POOL_VERSION = '&';
+        const LEGACY_POOL_VERSION = '!';
+        const INVALID_POOL_CODE_MESSAGE = 'Invalid or incomplete Pool Code.';
+        const POOL_CODE_CHECKSUM_MESSAGE = 'Pool Code checksum does not match. Did you copy the full message?';
         const LINE_BREAK_PATTERN = /(\r\n|\n|\r)/;
         const DISCORD_PREFIX_WITH_POOL_PATTERN = /(?:^|[\r\n])\[[^\]\r\n]+\][^\r\n]*?:\s*splash /i;
         const DISCORD_LINE_PATTERN = /^(\[[^\]\r\n]+\])\s*([^:\r\n]+:)(.*)$/;
@@ -392,7 +401,14 @@
 
         function isPoolCode(text) {
           const parts = splitWords(stripPoolPrefix(text));
-          return parts.length === 3 && parts[0] === POOL_VERSION && parts.slice(1).every(hasOnlyPoolAlphabetChars);
+          const isCurrentFormat = parts.length === 4 && parts[0] === POOL_VERSION && parts.slice(1).every(hasOnlyPoolAlphabetChars);
+          const isLegacyFormat = parts.length === 3 && parts[0] === LEGACY_POOL_VERSION && parts.slice(1).every(hasOnlyPoolAlphabetChars);
+          return isCurrentFormat || isLegacyFormat;
+        }
+
+        function looksLikePoolCode(text) {
+          const parts = splitWords(stripPoolPrefix(text));
+          return parts[0] === POOL_VERSION || parts[0] === LEGACY_POOL_VERSION;
         }
 
         function isMorseCode(text) {
@@ -443,11 +459,23 @@
           return bytes;
         }
 
+        function crc8(bytes) {
+          let crc = 0;
+          for (const byte of bytes) {
+            crc ^= byte;
+            for (let bit = 0; bit < 8; bit += 1) {
+              crc = (crc & 0x80) ? ((crc << 1) ^ 0x07) & 0xff : (crc << 1) & 0xff;
+            }
+          }
+          return crc;
+        }
+
         function encodePoolCode(text) {
           const bytes = new TextEncoder().encode(text);
+          const checksum = numberToPoolBase(BigInt(crc8(bytes)));
           const byteLength = numberToPoolBase(BigInt(bytes.length));
           const payload = numberToPoolBase(bytesToNumber(Array.from(bytes)));
-          return `${POOL_PREFIX}${POOL_VERSION} ${byteLength} ${payload}`;
+          return `${POOL_PREFIX}${POOL_VERSION} ${checksum} ${byteLength} ${payload}`;
         }
 
         function decodeOldPoolCode(text) {
@@ -460,10 +488,28 @@
         }
 
         function decodePoolCode(text) {
-          const [, byteLengthText, payloadText] = splitWords(stripPoolPrefix(text));
+          const parts = splitWords(stripPoolPrefix(text));
+          const [version] = parts;
+
+          if (version === LEGACY_POOL_VERSION) {
+            const [, byteLengthText, payloadText] = parts;
+            const byteLength = Number(poolBaseToNumber(byteLengthText));
+            const payload = poolBaseToNumber(payloadText);
+            const bytes = numberToBytes(payload, byteLength);
+            return new TextDecoder().decode(bytes);
+          }
+
+          const [, checksumText, byteLengthText, payloadText] = parts;
+          const expectedChecksum = Number(poolBaseToNumber(checksumText));
+          if (!Number.isInteger(expectedChecksum) || expectedChecksum < 0 || expectedChecksum > 255) {
+            throw new Error('Pool Code checksum byte is invalid.');
+          }
           const byteLength = Number(poolBaseToNumber(byteLengthText));
           const payload = poolBaseToNumber(payloadText);
           const bytes = numberToBytes(payload, byteLength);
+          if (crc8(bytes) !== expectedChecksum) {
+            throw new Error(POOL_CODE_CHECKSUM_MESSAGE);
+          }
           return new TextDecoder().decode(bytes);
         }
 
@@ -480,7 +526,9 @@
             if (isMorseCode(text)) return decodeMorseCode(text);
           } catch (error) {
             console.warn('Decode failed for input segment.', error);
+            if (looksLikePoolCode(text)) return error.message || INVALID_POOL_CODE_MESSAGE;
           }
+          if (looksLikePoolCode(text)) return INVALID_POOL_CODE_MESSAGE;
           return null;
         }
 
@@ -488,19 +536,30 @@
           return DISCORD_PREFIX_WITH_POOL_PATTERN.test(text);
         }
 
+        function normalizeDiscordUsername(username) {
+          const usernameWithoutColon = username.trim().replace(/:$/, '').trim();
+          const usernameWithoutBadges = usernameWithoutColon.replace(/\s+\[[^\]\r\n]+\],/g, '').trim();
+          return `${usernameWithoutBadges}:`;
+        }
+
         function formatDiscordPrefix(prefix) {
           const chatLine = prefix.match(DISCORD_LINE_PATTERN);
           if (!chatLine) return prefix;
           const [, timestamp, username] = chatLine;
-          return `${timestamp} ${username} `;
+          return `${timestamp} ${normalizeDiscordUsername(username)} `;
         }
 
         function convertDiscordLine(line) {
           const poolStart = findPoolPrefixIndex(line);
           if (poolStart === -1) return { decoded: false, text: line };
-          const decoded = tryDecodeMessage(line.slice(poolStart));
-          if (decoded === null) return { decoded: false, text: line };
-          return { decoded: true, text: formatDiscordPrefix(line.slice(0, poolStart)) + decoded };
+          try {
+            const decoded = tryDecodeMessage(line.slice(poolStart));
+            if (decoded === null) return { decoded: false, text: line };
+            return { decoded: true, text: formatDiscordPrefix(line.slice(0, poolStart)) + decoded };
+          } catch (error) {
+            console.warn('Discord line conversion failed.', error);
+            return { decoded: true, text: formatDiscordPrefix(line.slice(0, poolStart)) + (error.message || INVALID_POOL_CODE_MESSAGE) };
+          }
         }
 
         function convertDiscordChatLog(text) {
@@ -547,25 +606,47 @@
         }
 
         function colorForUsername(username) {
-          const normalizedUsername = username.endsWith(':') ? username.slice(0, -1) : username;
+          const normalizedUsername = normalizeDiscordUsername(username).slice(0, -1);
           return CUSTOM_USERNAME_COLORS[normalizedUsername] || stringToColor(normalizedUsername);
+        }
+
+        function isOutputErrorMessage(message) {
+          const normalizedMessage = message.trim();
+          return normalizedMessage === INVALID_POOL_CODE_MESSAGE || normalizedMessage === POOL_CODE_CHECKSUM_MESSAGE;
+        }
+
+        function appendOutputMessage(message) {
+          if (!isOutputErrorMessage(message)) {
+            outputText.append(document.createTextNode(message));
+            return;
+          }
+
+          const errorSpan = document.createElement('span');
+          errorSpan.className = 'output-error';
+          errorSpan.textContent = message;
+          outputText.append(errorSpan);
         }
 
         function appendOutputLine(line) {
           const chatLine = line.match(DISCORD_LINE_PATTERN);
           if (!chatLine) {
-            outputText.append(document.createTextNode(line));
+            appendOutputMessage(line);
             return;
           }
           const [, timestamp, username, message] = chatLine;
+          const normalizedUsername = normalizeDiscordUsername(username);
+          const timestampSpan = document.createElement('span');
+          timestampSpan.className = 'chat-timestamp';
+          timestampSpan.textContent = `${timestamp} `;
+
           const usernameSpan = document.createElement('span');
           usernameSpan.className = 'chat-username';
-          usernameSpan.style.color = colorForUsername(username);
-          usernameSpan.textContent = username;
+          usernameSpan.style.color = colorForUsername(normalizedUsername);
+          usernameSpan.textContent = normalizedUsername;
 
-          outputText.append(document.createTextNode(`${timestamp} `));
+          outputText.append(timestampSpan);
           outputText.append(usernameSpan);
-          outputText.append(document.createTextNode(message));
+          appendOutputMessage(message);
         }
 
         function renderOutput(text) {
