@@ -41,11 +41,13 @@
             flex-direction: column;
             overflow: hidden;
         }
+
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 18px;
+            min-height: 52px;           /* locked height - no shift */
             flex-wrap: wrap;
             gap: 12px;
         }
@@ -56,6 +58,9 @@
             flex: 1;
             min-width: 0;
             font-size: 1.55em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .content {
@@ -127,6 +132,27 @@
             outline-offset: 0;
         }
 
+        /* Circular Info Button */
+        .info-button {
+            background: transparent;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--accent);
+            flex-shrink: 0;
+            font-weight: bold;
+        }
+        .info-button:hover {
+            background: rgba(255,255,255,0.1);
+            transform: scale(1.08);
+        }
+
         .lang-switch {
             display: flex;
             gap: 8px;
@@ -148,6 +174,15 @@
             transform: scale(1.08);
         }
 
+        /* Bottom section with fixed height to prevent any vertical shift */
+        .bottom-section {
+            min-height: 82px;           /* enough for both English and Japanese */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
         .credits,
         .twitch {
             text-align: center;
@@ -166,6 +201,37 @@
             opacity: 1;
             border-bottom-style: solid;
         }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: #0a0a0a;
+            border: 2px solid var(--accent);
+            padding: 25px;
+            max-width: 520px;
+            width: 90%;
+            color: var(--accent);
+            font-size: 1.1em;
+            line-height: 1.4;
+        }
+        .modal-close {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 1.8em;
+            cursor: pointer;
+            color: var(--accent);
+            line-height: 1;
+        }
     </style>
 </head>
 <body>
@@ -173,8 +239,9 @@
         <div class="header">
             <h1 id="title">* sacr1f1ce & tictac's Pool Code Translator</h1>
             
+            <button id="infoButton" class="info-button" title="Info">i</button>
+            
             <div class="lang-switch">
-                <!-- UK Flag -->
                 <div onclick="switchLanguage('en')" id="lang-en" class="flag-container active" title="English">
                     <svg width="44" height="30" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="image-rendering: pixelated;">
                         <rect width="60" height="40" fill="#00247D"/>
@@ -189,7 +256,6 @@
                     </svg>
                 </div>
                 
-                <!-- Japan Flag -->
                 <div onclick="switchLanguage('ja')" id="lang-ja" class="flag-container" title="日本語">
                     <svg width="44" height="30" viewBox="0 0 40 30" xmlns="http://www.w3.org/2000/svg" style="image-rendering: pixelated;">
                         <rect width="40" height="30" fill="#ffffff"/>
@@ -210,7 +276,6 @@
                 <textarea id="outputText" readonly placeholder="Result appears here"></textarea>
             </div>
 
-            <!-- Button row -->
             <div class="button-row">
                 <button id="copyButton">Copy Output</button>
                 <button id="clearButton">Clear</button>
@@ -218,184 +283,331 @@
         </div>
     </div>
 
-    <!-- Credits (now bilingual) -->
-    <div class="credits" id="credits">
-        Made with ❤️ by 
-        <a href="https://linktr.ee/sacr1f1ce" target="_blank" rel="noopener">sacr1f1ce</a> 
-        &amp; 
-        <a href="https://github.com/tictac09" target="_blank" rel="noopener">tictac</a>
+    <!-- Bottom section with fixed height so terminal never moves -->
+    <div class="bottom-section">
+        <div class="credits" id="credits">
+            Made with ❤️ by 
+            <a href="https://linktr.ee/sacr1f1ce" target="_blank" rel="noopener">sacr1f1ce</a> 
+            &amp; 
+            <a href="https://github.com/tictac09" target="_blank" rel="noopener">tictac</a>
+        </div>
+
+        <div class="twitch" id="twitch">
+            Follow <a href="https://twitch.tv/itboji" target="_blank" rel="noopener">itboji</a> on Twitch!
+        </div>
     </div>
 
-    <!-- Twitch (now bilingual) -->
-    <div class="twitch" id="twitch">
-        Follow <a href="https://twitch.tv/itboji" target="_blank" rel="noopener">itboji</a> on Twitch!
+    <!-- Info Modal -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content">
+            <button onclick="closeModal()" class="modal-close">×</button>
+            <h2 id="modalTitle">About Pool Code Translator</h2>
+            <div id="modalBody"></div>
+        </div>
     </div>
 
     <script>
-        // === COMPACT POOL CODE TRANSLATOR ===
+        // === TICTAC'S ADVANCED CODE ===
         const inputText = document.getElementById('inputText');
         const outputText = document.getElementById('outputText');
         const copyButton = document.getElementById('copyButton');
-        const clearButton = document.getElementById('clearButton');
-        const POOL_PREFIX = 'Splash ';
 
+        const POOL_PREFIX = 'Splash ';
+        const POOL_PREFIX_LOWER = POOL_PREFIX.toLowerCase();
         const POOL_VERSION = '!';
+        const COPY_BUTTON_TEXT = 'Copy';
+        const LINE_BREAK_PATTERN = /(\r\n|\n|\r)/;
+        const DISCORD_PREFIX_WITH_POOL_PATTERN = /(?:^|[\r\n])\[[^\]\r\n]+\][^\r\n]*?:\s*splash /i;
+        const DISCORD_LINE_PATTERN = /^(\[[^\]\r\n]+\])\s*([^:\r\n]+:)(.*)$/;
+
+        const CUSTOM_USERNAME_COLORS = {
+          TicTac09: '#d66420'
+        };
+
+        const symbolHex = {
+          '0': ')', '1': '!', '2': '@', '3': '#', '4': '"',
+          '5': '%', '6': '.', '7': '&', '8': '§', '9': '(',
+          'a': '-', 'b': '¿', 'c': '{', 'd': '}', 'e': '[', 'f': ']'
+        };
+
+        const symbolToHex = Object.fromEntries(
+          Object.entries(symbolHex).map(([hex, symbol]) => [symbol, hex])
+        );
+
         const poolAlphabet = ['-', '/', ':', ';', '@', '"', '.', ',', '?', '!', '\'', '[', ']', '{', '}', '#', '%', '•', '§', '¿', '&', '·', '…', '¡'];
         const poolBase = BigInt(poolAlphabet.length);
         const poolCharToValue = new Map(poolAlphabet.map((char, index) => [char, BigInt(index)]));
 
-        const symbolHex = {
-            '0': ')', '1': '!', '2': '@', '3': '#', '4': '"',
-            '5': '%', '6': '.', '7': '&', '8': '§', '9': '(',
-            'a': '-', 'b': '¿', 'c': '{', 'd': '}', 'e': '[', 'f': ']'
-        };
-        const symbolToHex = Object.fromEntries(Object.entries(symbolHex).map(([h, s]) => [s, h]));
-
         const morseToChar = {
-            '.-': 'A', '-...': 'B', '-.-.': 'C', '-..': 'D', '.': 'E',
-            '..-.': 'F', '--.': 'G', '....': 'H', '..': 'I', '.---': 'J',
-            '-.-': 'K', '.-..': 'L', '--': 'M', '-.': 'N', '---': 'O',
-            '.--.': 'P', '--.-': 'Q', '.-.': 'R', '...': 'S', '-': 'T',
-            '..-': 'U', '...-': 'V', '.--': 'W', '-..-': 'X', '-.--': 'Y',
-            '--..': 'Z', '-----': '0', '.----': '1', '..---': '2', '...--': '3',
-            '....-': '4', '.....': '5', '-....': '6', '--...': '7', '---..': '8',
-            '----.': '9', '.-.-.-': '.', '--..--': ',', '..--..': '?',
-            '.----.': "'", '-.-.--': '!', '-..-.': '/', '-.--.': '(', '-.--.-': ')',
-            '.-...': '&', '---...': ':', '-.-.-.': ';', '-...-': '=', '.-.-.': '+',
-            '-....-': '-', '..--.-': '_', '.-..-.': '"', '...-..-': '$', '.--.-.': '@'
+          '.-': 'A', '-...': 'B', '-.-.': 'C', '-..': 'D', '.': 'E',
+          '..-.': 'F', '--.': 'G', '....': 'H', '..': 'I', '.---': 'J',
+          '-.-': 'K', '.-..': 'L', '--': 'M', '-.': 'N', '---': 'O',
+          '.--.': 'P', '--.-': 'Q', '.-.': 'R', '...': 'S', '-': 'T',
+          '..-': 'U', '...-': 'V', '.--': 'W', '-..-': 'X', '-.--': 'Y',
+          '--..': 'Z', '-----': '0', '.----': '1', '..---': '2', '...--': '3',
+          '....-': '4', '.....': '5', '-....': '6', '--...': '7', '---..': '8',
+          '----.': '9', '.-.-.-': '.', '--..--': ',', '..--..': '?',
+          '.----.': "'", '-.-.--': '!', '-..-.': '/', '-.--.': '(', '-.--.-': ')',
+          '.-...': '&', '---...': ':', '-.-.-.': ';', '-...-': '=', '.-.-.': '+',
+          '-....-': '-', '..--.-': '_', '.-..-.': '"', '...-..-': '$', '.--.-.': '@'
         };
+
+        let outputValue = '';
 
         function stripPoolPrefix(text) {
-            const trimmedStart = text.trimStart();
-            if (trimmedStart.startsWith(POOL_PREFIX)) return trimmedStart.slice(POOL_PREFIX.length);
-            return text;
+          const trimmedStart = text.trimStart();
+          if (trimmedStart.toLowerCase().startsWith(POOL_PREFIX_LOWER)) {
+            return trimmedStart.slice(POOL_PREFIX.length);
+          }
+          return text;
         }
 
-        function isMorseCode(text) {
-            const trimmed = stripPoolPrefix(text).trim();
-            if (!trimmed) return false;
-            const normalized = trimmed.replace(/_/g, '-');
-            if (!/^[.\-/\s]+$/.test(normalized)) return false;
-            const words = normalized.split('/').map(w => w.trim()).filter(Boolean);
-            if (!words.length) return false;
-            return words.every(word => {
-                const letters = word.split(/\s+/).filter(Boolean);
-                return letters.length > 0 && letters.every(letter => letter in morseToChar);
-            });
+        function findPoolPrefixIndex(text) {
+          return text.toLowerCase().indexOf(POOL_PREFIX_LOWER);
         }
 
-        function isOldPoolCode(text) {
-            const trimmed = stripPoolPrefix(text).trim();
-            if (!trimmed) return false;
-            const tokens = trimmed.split(/\s+/);
-            return tokens.every(token => token.length === 2 && token.split('').every(char => char in symbolToHex));
+        function splitWords(text) {
+          return text.trim().split(/\s+/).filter(Boolean);
         }
 
         function hasOnlyPoolAlphabetChars(text) {
-            return Array.from(text).every(char => poolCharToValue.has(char));
+          return Array.from(text).every((char) => poolCharToValue.has(char));
         }
 
-        function numberToPoolBase(number) {
-            if (number === 0n) return poolAlphabet[0];
-            let remaining = number;
-            let encoded = '';
-            while (remaining > 0n) {
-                const index = Number(remaining % poolBase);
-                encoded = poolAlphabet[index] + encoded;
-                remaining /= poolBase;
-            }
-            return encoded;
-        }
-
-        function poolBaseToNumber(text) {
-            return Array.from(text).reduce((number, char) => number * poolBase + poolCharToValue.get(char), 0n);
-        }
-
-        function bytesToNumber(bytes) {
-            return bytes.reduce((number, byte) => number * 256n + BigInt(byte), 0n);
-        }
-
-        function numberToBytes(number, byteLength) {
-            const bytes = new Uint8Array(byteLength);
-            let remaining = number;
-            for (let i = byteLength - 1; i >= 0; i--) {
-                bytes[i] = Number(remaining % 256n);
-                remaining /= 256n;
-            }
-            return bytes;
+        function isOldPoolCode(text) {
+          const tokens = splitWords(stripPoolPrefix(text));
+          return tokens.length > 0
+            && tokens.every((token) => token.length === 2 && Array.from(token).every((char) => char in symbolToHex));
         }
 
         function isPoolCode(text) {
-            const trimmed = stripPoolPrefix(text).trim();
-            if (!trimmed) return false;
-            const parts = trimmed.split(/\s+/);
-            return parts.length === 3 && parts[0] === POOL_VERSION && parts.slice(1).every(hasOnlyPoolAlphabetChars);
+          const parts = splitWords(stripPoolPrefix(text));
+          return parts.length === 3
+            && parts[0] === POOL_VERSION
+            && parts.slice(1).every(hasOnlyPoolAlphabetChars);
+        }
+
+        function isMorseCode(text) {
+          const normalized = stripPoolPrefix(text).trim().replace(/_/g, '-');
+          if (!normalized || !/^[.\-/\s]+$/.test(normalized)) return false;
+
+          const words = normalized.split('/').map((word) => word.trim()).filter(Boolean);
+          return words.length > 0 && words.every((word) => {
+            const letters = splitWords(word);
+            return letters.length > 0 && letters.every((letter) => letter in morseToChar);
+          });
+        }
+
+        function numberToPoolBase(number) {
+          if (number === 0n) return poolAlphabet[0];
+
+          let remaining = number;
+          let encoded = '';
+          while (remaining > 0n) {
+            const index = Number(remaining % poolBase);
+            encoded = poolAlphabet[index] + encoded;
+            remaining /= poolBase;
+          }
+          return encoded;
+        }
+
+        function poolBaseToNumber(text) {
+          return Array.from(text).reduce((number, char) => {
+            const value = poolCharToValue.get(char);
+            if (value === undefined) throw new Error(`Invalid Pool Code character: ${char}`);
+            return number * poolBase + value;
+          }, 0n);
+        }
+
+        function bytesToNumber(bytes) {
+          return bytes.reduce((number, byte) => number * 256n + BigInt(byte), 0n);
+        }
+
+        function numberToBytes(number, byteLength) {
+          if (!Number.isSafeInteger(byteLength) || byteLength < 0) {
+            throw new Error('Encoded byte length is invalid.');
+          }
+          const bytes = new Uint8Array(byteLength);
+          let remaining = number;
+          for (let index = byteLength - 1; index >= 0; index -= 1) {
+            bytes[index] = Number(remaining % 256n);
+            remaining /= 256n;
+          }
+          if (remaining > 0n) throw new Error('Encoded payload is too large for its byte length.');
+          return bytes;
         }
 
         function encodePoolCode(text) {
-            const bytes = new TextEncoder().encode(text);
-            const byteLength = numberToPoolBase(BigInt(bytes.length));
-            const payload = numberToPoolBase(bytesToNumber(Array.from(bytes)));
-            return `${POOL_PREFIX}${POOL_VERSION} ${byteLength} ${payload}`;
+          const bytes = new TextEncoder().encode(text);
+          const byteLength = numberToPoolBase(BigInt(bytes.length));
+          const payload = numberToPoolBase(bytesToNumber(Array.from(bytes)));
+          return `${POOL_PREFIX}${POOL_VERSION} ${byteLength} ${payload}`;
         }
 
         function decodeOldPoolCode(text) {
-            const tokens = stripPoolPrefix(text).trim().split(/\s+/);
-            const hexString = tokens.map(token => token.split('').map(char => symbolToHex[char]).join('')).join('');
-            const bytes = new Uint8Array(hexString.match(/.{2}/g).map(pair => parseInt(pair, 16)));
-            return new TextDecoder().decode(bytes);
+          const tokens = splitWords(stripPoolPrefix(text));
+          const hexString = tokens.map(token => Array.from(token).map(char => symbolToHex[char]).join('')).join('');
+          const bytePairs = hexString.match(/.{2}/g);
+          if (!bytePairs) throw new Error('Old Pool Code has no decodable bytes.');
+          const bytes = new Uint8Array(bytePairs.map(pair => parseInt(pair, 16)));
+          return new TextDecoder().decode(bytes);
         }
 
         function decodePoolCode(text) {
-            const [, byteLengthText, payloadText] = stripPoolPrefix(text).trim().split(/\s+/);
-            const byteLength = Number(poolBaseToNumber(byteLengthText));
-            const payload = poolBaseToNumber(payloadText);
-            const bytes = numberToBytes(payload, byteLength);
-            return new TextDecoder().decode(bytes);
+          const [, byteLengthText, payloadText] = splitWords(stripPoolPrefix(text));
+          const byteLength = Number(poolBaseToNumber(byteLengthText));
+          const payload = poolBaseToNumber(payloadText);
+          const bytes = numberToBytes(payload, byteLength);
+          return new TextDecoder().decode(bytes);
         }
 
         function decodeMorseCode(text) {
-            const normalized = stripPoolPrefix(text).trim().replace(/_/g, '-');
-            const words = normalized.split('/').map(w => w.trim()).filter(Boolean);
-            return words.map(word => word.split(/\s+/).map(letter => morseToChar[letter]).join('')).join(' ');
+          const normalized = stripPoolPrefix(text).trim().replace(/_/g, '-');
+          const words = normalized.split('/').map(w => w.trim()).filter(Boolean);
+          return words.map(word => splitWords(word).map(letter => morseToChar[letter]).join('')).join(' ');
+        }
+
+        function tryDecodeMessage(text) {
+          try {
+            if (isOldPoolCode(text)) return decodeOldPoolCode(text);
+            if (isPoolCode(text)) return decodePoolCode(text);
+            if (isMorseCode(text)) return decodeMorseCode(text);
+          } catch (error) {
+            console.warn('Decode failed for input segment.', error);
+          }
+          return null;
+        }
+
+        function hasDiscordPrefixBeforePool(text) {
+          return DISCORD_PREFIX_WITH_POOL_PATTERN.test(text);
+        }
+
+        function formatDiscordPrefix(prefix) {
+          const chatLine = prefix.match(DISCORD_LINE_PATTERN);
+          if (!chatLine) return prefix;
+          const [, timestamp, username] = chatLine;
+          return `${timestamp} ${username} `;
+        }
+
+        function convertDiscordLine(line) {
+          const poolStart = findPoolPrefixIndex(line);
+          if (poolStart === -1) return { decoded: false, text: line };
+          const decoded = tryDecodeMessage(line.slice(poolStart));
+          if (decoded === null) return { decoded: false, text: line };
+          return { decoded: true, text: formatDiscordPrefix(line.slice(0, poolStart)) + decoded };
+        }
+
+        function convertDiscordChatLog(text) {
+          const shouldTryChatLog = LINE_BREAK_PATTERN.test(text) || hasDiscordPrefixBeforePool(text);
+          if (!shouldTryChatLog) return null;
+
+          let decodedAny = false;
+          const converted = text.split(LINE_BREAK_PATTERN).map((part) => {
+            if (LINE_BREAK_PATTERN.test(part)) return part;
+            const result = convertDiscordLine(part);
+            decodedAny = decodedAny || result.decoded;
+            return result.text;
+          }).join('');
+          return decodedAny ? converted : null;
+        }
+
+        function hslToHex(h, s, l) {
+          const normalizedSaturation = s / 100;
+          const normalizedLightness = l / 100;
+          const c = (1 - Math.abs(2 * normalizedLightness - 1)) * normalizedSaturation;
+          const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+          const m = normalizedLightness - c / 2;
+          let r = 0, g = 0, b = 0;
+
+          if (h < 60) [r, g, b] = [c, x, 0];
+          else if (h < 120) [r, g, b] = [x, c, 0];
+          else if (h < 180) [r, g, b] = [0, c, x];
+          else if (h < 240) [r, g, b] = [0, x, c];
+          else if (h < 300) [r, g, b] = [x, 0, c];
+          else [r, g, b] = [c, 0, x];
+
+          const toHex = (value) => Math.round((value + m) * 255).toString(16).padStart(2, '0');
+          return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        }
+
+        function stringToColor(input) {
+          let hash = 0;
+          for (let i = 0; i < input.length; i++) {
+            hash = input.charCodeAt(i) + ((hash << 5) - hash);
+            hash |= 0;
+          }
+          const hue = Math.abs(hash) % 360;
+          return hslToHex(hue, 70, 55);
+        }
+
+        function colorForUsername(username) {
+          const normalizedUsername = username.endsWith(':') ? username.slice(0, -1) : username;
+          return CUSTOM_USERNAME_COLORS[normalizedUsername] || stringToColor(normalizedUsername);
+        }
+
+        function appendOutputLine(line) {
+          const chatLine = line.match(DISCORD_LINE_PATTERN);
+          if (!chatLine) {
+            outputText.append(document.createTextNode(line));
+            return;
+          }
+          const [, timestamp, username, message] = chatLine;
+          const usernameSpan = document.createElement('span');
+          usernameSpan.className = 'chat-username';
+          usernameSpan.style.color = colorForUsername(username);
+          usernameSpan.textContent = username;
+
+          outputText.append(document.createTextNode(`${timestamp} `));
+          outputText.append(usernameSpan);
+          outputText.append(document.createTextNode(message));
+        }
+
+        function renderOutput(text) {
+          outputText.replaceChildren();
+          if (!text) return;
+          text.split(LINE_BREAK_PATTERN).forEach((part) => {
+            if (LINE_BREAK_PATTERN.test(part)) {
+              outputText.append(document.createTextNode(part));
+            } else {
+              appendOutputLine(part);
+            }
+          });
+        }
+
+        function setOutput(text) {
+          outputValue = text;
+          renderOutput(text);
+        }
+
+        function convertText(text) {
+          if (!text.trim()) return '';
+          const discordChatLog = convertDiscordChatLog(text);
+          if (discordChatLog !== null) return discordChatLog;
+          const decodedMessage = tryDecodeMessage(text);
+          return decodedMessage !== null ? decodedMessage : encodePoolCode(text);
         }
 
         function convert() {
-            const text = inputText.value;
-            if (!text.trim()) {
-                outputText.value = '';
-                return;
-            }
-
-            if (isOldPoolCode(text)) {
-                outputText.value = decodeOldPoolCode(text);
-            } else if (isPoolCode(text)) {
-                outputText.value = decodePoolCode(text);
-            } else if (isMorseCode(text)) {
-                outputText.value = decodeMorseCode(text);
-            } else {
-                outputText.value = encodePoolCode(text);
-            }
+          try {
+            setOutput(convertText(inputText.value));
+          } catch (error) {
+            console.error('Conversion failed.', error);
+            setOutput('Could not convert this text.');
+          }
         }
 
         async function copyOutput() {
-            if (!outputText.value) return;
-            try {
-                await navigator.clipboard.writeText(outputText.value);
-                copyButton.textContent = 'Splash!';
-                setTimeout(() => { copyButton.textContent = 'Copy Output'; }, 1200);
-            } catch (e) {
-                console.error(e);
-            }
+          if (!outputValue) return;
+          try {
+            await navigator.clipboard.writeText(outputValue);
+            copyButton.textContent = 'Splash!';
+            setTimeout(() => { copyButton.textContent = COPY_BUTTON_TEXT; }, 1200);
+          } catch (error) {
+            console.error('Copy failed.', error);
+          }
         }
 
-        function clearAll() {
-            inputText.value = '';
-            outputText.value = '';
-            inputText.focus();
-        }
-
-        // Translations (now including credits and Twitch)
+        // Translations
         const translations = {
             en: {
                 title: "* sacr1f1ce & tictac's Pool Code Translator",
@@ -406,7 +618,14 @@
                 copyButton: "Copy Output",
                 clearButton: "Clear",
                 credits: `Made with ❤️ by <a href="https://linktr.ee/sacr1f1ce" target="_blank" rel="noopener">sacr1f1ce</a> &amp; <a href="https://github.com/tictac09" target="_blank" rel="noopener">tictac</a>`,
-                twitch: `Follow <a href="https://twitch.tv/itboji" target="_blank" rel="noopener">itboji</a> on Twitch!`
+                twitch: `Follow <a href="https://twitch.tv/itboji" target="_blank" rel="noopener">itboji</a> on Twitch!`,
+                modalTitle: "About Pool Code Translator",
+                modalBody: `<p>This tool automatically converts between normal text and Pool Code. It can also decode Morse code, making it easy to read older messages from the pool.</p>
+                <p>Just type or paste anything — it will detect the format and convert automatically.</p>
+                <p>It also supports Discord chat logs. Copy and paste multiple messages at once and they will all be decoded (including timestamps and colored usernames).</p>
+                <p>Any issues, feel free to DM .sacr1f1ce.</p>
+                
+
             },
             ja: {
                 title: "* sacr1f1ce & tictacのプールコード翻訳機",
@@ -417,7 +636,13 @@
                 copyButton: "出力をコピー",
                 clearButton: "クリア",
                 credits: `❤️ で作られた <a href="https://linktr.ee/sacr1f1ce" target="_blank" rel="noopener">sacr1f1ce</a> &amp; <a href="https://github.com/tictac09" target="_blank" rel="noopener">tictac</a>`,
-                twitch: `Twitchで <a href="https://twitch.tv/itboji" target="_blank" rel="noopener">itboji</a> をフォロー！`
+                twitch: `Twitchで <a href="https://twitch.tv/itboji" target="_blank" rel="noopener">itboji</a> をフォロー！`,
+                modalTitle: "Poolコード翻訳機について",
+                modalBody: `<p>このツールは通常のテキストとPoolコードを自動で変換します。また、モールス信号のデコードも可能なので、古いPoolのメッセージも簡単に読めます。</p>
+                            <p>何でも入力したり貼り付けたりするだけで、形式を自動検出して変換します。</p>
+                            <p>Discordのチャットログにも対応しています。一度に複数のメッセージをコピー＆ペーストすると、すべてデコードされます。</p>
+                            <p>何か問題があれば、.sacr1f1ceまでDMしてください。</p>
+                            <p>Happy splashing!</p>`
             }
         };
 
@@ -443,17 +668,35 @@
             copyButton.textContent = t.copyButton;
             clearButton.textContent = t.clearButton;
 
-            // Update credits and Twitch with full localized HTML
             document.getElementById('credits').innerHTML = t.credits;
             document.getElementById('twitch').innerHTML = t.twitch;
 
             applyTheme(lang);
         }
 
+        function clearAll() {
+            inputText.value = '';
+            outputText.replaceChildren();
+            outputValue = '';
+            inputText.focus();
+        }
+
+        function showInfo() {
+            const t = translations[currentLang];
+            document.getElementById('modalTitle').textContent = t.modalTitle;
+            document.getElementById('modalBody').innerHTML = t.modalBody;
+            document.getElementById('infoModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('infoModal').style.display = 'none';
+        }
+
         // Event listeners
         copyButton.addEventListener('click', copyOutput);
         clearButton.addEventListener('click', clearAll);
         inputText.addEventListener('input', convert);
+        document.getElementById('infoButton').addEventListener('click', showInfo);
 
         // Initialize
         convert();
