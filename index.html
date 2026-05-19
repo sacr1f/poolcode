@@ -40,7 +40,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            position: relative;           /* NEW: allows modal to be centered inside terminal */
+            position: relative;
         }
 
         .header {
@@ -145,8 +145,9 @@
             outline-offset: 0;
         }
 
-        /* Circular Info Button */
-        .info-button {
+        /* Circular buttons (info + new ohyes button) */
+        .info-button,
+        .ohyes-button {
             background: transparent;
             border: 2px solid var(--accent);
             border-radius: 50%;
@@ -161,7 +162,8 @@
             flex-shrink: 0;
             font-weight: bold;
         }
-        .info-button:hover {
+        .info-button:hover,
+        .ohyes-button:hover {
             background: rgba(255,255,255,0.1);
             transform: scale(1.08);
         }
@@ -218,7 +220,7 @@
         /* Modal - now centered vertically INSIDE the terminal */
         .modal {
             display: none;
-            position: absolute;           /* changed to absolute relative to .terminal */
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
@@ -254,7 +256,11 @@
         <div class="header">
             <h1 id="title">* sacr1f1ce & tictac's Pool Code Translator</h1>
             
+            <!-- Info button -->
             <button id="infoButton" class="info-button" title="Info">i</button>
+            
+            <!-- New ohyes button -->
+            <button id="playOhYesButton" class="ohyes-button" title="Play ohyes.mp3">♪</button>
             
             <div class="lang-switch">
                 <div onclick="switchLanguage('en')" id="lang-en" class="flag-container active" title="English">
@@ -297,7 +303,7 @@
             </div>
         </div>
 
-        <!-- Info Modal - now inside terminal so it centers vertically within it -->
+        <!-- Info Modal -->
         <div id="infoModal" class="modal">
             <div class="modal-content">
                 <button onclick="closeModal()" class="modal-close">×</button>
@@ -307,7 +313,7 @@
         </div>
     </div>
 
-    <!-- Bottom section with fixed height so terminal never moves -->
+    <!-- Bottom section -->
     <div class="bottom-section">
         <div class="credits" id="credits">
             Made with ❤️ by 
@@ -321,7 +327,7 @@
         </div>
     </div>
 
-    <!-- Konami Code Audio -->
+    <!-- Audio for ohyes.mp3 -->
     <audio id="ohyesAudio" src="ohyes.mp3" preload="auto"></audio>
 
     <script>
@@ -701,33 +707,33 @@
         }
 
         // ========================
-        // KONAMI CODE EASTER EGG
+        // OHYES AUDIO + BUTTON + KONAMI
         // ========================
-        const konamiCode = [
-            'ArrowUp', 'ArrowUp',
-            'ArrowDown', 'ArrowDown',
-            'ArrowLeft', 'ArrowRight',
-            'ArrowLeft', 'ArrowRight',
-            'KeyB', 'KeyA'
-        ];
-        let konamiIndex = 0;
+        const ohyesAudio = document.getElementById('ohyesAudio');
 
         function playOhYes() {
-            const audio = document.getElementById('ohyesAudio');
-            if (audio) {
-                audio.currentTime = 0;
-                audio.play().catch(err => {
-                    console.log('Could not play ohyes.mp3 (user interaction required or file missing)', err);
+            if (ohyesAudio) {
+                ohyesAudio.currentTime = 0;
+                ohyesAudio.play().catch(err => {
+                    console.log('Could not play ohyes.mp3', err);
                 });
             }
         }
+
+        // New button
+        const playOhYesButton = document.getElementById('playOhYesButton');
+        playOhYesButton.addEventListener('click', playOhYes);
+
+        // Konami Code (still works)
+        const konamiCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','KeyB','KeyA'];
+        let konamiIndex = 0;
 
         document.addEventListener('keydown', (e) => {
             if (e.key === konamiCode[konamiIndex]) {
                 konamiIndex++;
                 if (konamiIndex === konamiCode.length) {
                     playOhYes();
-                    konamiIndex = 0; // reset for next time
+                    konamiIndex = 0;
                 }
             } else {
                 konamiIndex = 0;
