@@ -40,7 +40,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            position: relative;
+            position: relative;           /* NEW: allows modal to be centered inside terminal */
         }
 
         .header {
@@ -218,7 +218,7 @@
         /* Modal - now centered vertically INSIDE the terminal */
         .modal {
             display: none;
-            position: absolute;
+            position: absolute;           /* changed to absolute relative to .terminal */
             top: 0;
             left: 0;
             width: 100%;
@@ -297,7 +297,7 @@
             </div>
         </div>
 
-        <!-- Info Modal -->
+        <!-- Info Modal - now inside terminal so it centers vertically within it -->
         <div id="infoModal" class="modal">
             <div class="modal-content">
                 <button onclick="closeModal()" class="modal-close">×</button>
@@ -307,7 +307,7 @@
         </div>
     </div>
 
-    <!-- Bottom section -->
+    <!-- Bottom section with fixed height so terminal never moves -->
     <div class="bottom-section">
         <div class="credits" id="credits">
             Made with ❤️ by 
@@ -321,8 +321,8 @@
         </div>
     </div>
 
-    <!-- Konami audio (plays when ↑↑↓↓←→←→BA is entered) -->
-    <audio id="konamiAudio" src="ohyes.mp3" preload="auto"></audio>
+    <!-- Konami Code Audio -->
+    <audio id="ohyesAudio" src="ohyes.mp3" preload="auto"></audio>
 
     <script>
         // === TICTAC'S ADVANCED CODE ===
@@ -700,40 +700,45 @@
             document.getElementById('infoModal').style.display = 'none';
         }
 
-        // ====================== KONAMI CODE EASTER EGG ======================
+        // ========================
+        // KONAMI CODE EASTER EGG
+        // ========================
         const konamiCode = [
-          'ArrowUp', 'ArrowUp',
-          'ArrowDown', 'ArrowDown',
-          'ArrowLeft', 'ArrowRight',
-          'ArrowLeft', 'ArrowRight',
-          'KeyB', 'KeyA'
+            'ArrowUp', 'ArrowUp',
+            'ArrowDown', 'ArrowDown',
+            'ArrowLeft', 'ArrowRight',
+            'ArrowLeft', 'ArrowRight',
+            'KeyB', 'KeyA'
         ];
         let konamiIndex = 0;
 
-        function handleKonami(e) {
-          if (e.key === konamiCode[konamiIndex]) {
-            konamiIndex++;
-            if (konamiIndex === konamiCode.length) {
-              const audio = document.getElementById('konamiAudio');
-              if (audio) {
+        function playOhYes() {
+            const audio = document.getElementById('ohyesAudio');
+            if (audio) {
                 audio.currentTime = 0;
-                audio.play().catch(() => {}); // ignore autoplay restrictions
-              }
-              konamiIndex = 0;
+                audio.play().catch(err => {
+                    console.log('Could not play ohyes.mp3 (user interaction required or file missing)', err);
+                });
             }
-          } else {
-            konamiIndex = 0;
-          }
         }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === konamiCode[konamiIndex]) {
+                konamiIndex++;
+                if (konamiIndex === konamiCode.length) {
+                    playOhYes();
+                    konamiIndex = 0; // reset for next time
+                }
+            } else {
+                konamiIndex = 0;
+            }
+        });
 
         // Event listeners
         copyButton.addEventListener('click', copyOutput);
         clearButton.addEventListener('click', clearAll);
         inputText.addEventListener('input', convert);
         document.getElementById('infoButton').addEventListener('click', showInfo);
-
-        // Konami code listener (works anywhere on the page)
-        document.addEventListener('keydown', handleKonami);
 
         // Initialize
         convert();
