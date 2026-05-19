@@ -332,8 +332,10 @@
 
         const POOL_PREFIX = 'Splash ';
         const POOL_PREFIX_LOWER = POOL_PREFIX.toLowerCase();
-        const POOL_VERSION = '!';
+        const POOL_VERSION = '&';
+        const LEGACY_POOL_VERSION = '!';
         const INVALID_POOL_CODE_MESSAGE = 'Invalid or incomplete Pool Code.';
+        const POOL_CODE_CHECKSUM_MESSAGE = 'Pool Code checksum does not match. Did you copy the full message?';
         const LINE_BREAK_PATTERN = /(\r\n|\n|\r)/;
         const DISCORD_PREFIX_WITH_POOL_PATTERN = /(?:^|[\r\n])\[[^\]\r\n]+\][^\r\n]*?:\s*splash /i;
         const DISCORD_LINE_PATTERN = /^(\[[^\]\r\n]+\])\s*([^:\r\n]+:)(.*)$/;
@@ -371,10 +373,6 @@
           '-....-': '-', '..--.-': '_', '.-..-.': '"', '...-..-': '$', '.--.-.': '@'
         };
 
-        function containsReplacementCharacter(str) {
-            return str.includes('\uFFFD');
-        }
-
         let outputValue = '';
 
         function stripPoolPrefix(text) {
@@ -404,12 +402,14 @@
 
         function isPoolCode(text) {
           const parts = splitWords(stripPoolPrefix(text));
-          return parts.length === 3 && parts[0] === POOL_VERSION && parts.slice(1).every(hasOnlyPoolAlphabetChars);
+          const isCurrentFormat = parts.length === 4 && parts[0] === POOL_VERSION && parts.slice(1).every(hasOnlyPoolAlphabetChars);
+          const isLegacyFormat = parts.length === 3 && parts[0] === LEGACY_POOL_VERSION && parts.slice(1).every(hasOnlyPoolAlphabetChars);
+          return isCurrentFormat || isLegacyFormat;
         }
 
         function looksLikePoolCode(text) {
           const parts = splitWords(stripPoolPrefix(text));
-          return parts[0] === POOL_VERSION;
+          return parts[0] === POOL_VERSION || parts[0] === LEGACY_POOL_VERSION;
         }
 
         function isMorseCode(text) {
@@ -460,11 +460,23 @@
           return bytes;
         }
 
+        function crc8(bytes) {
+          let crc = 0;
+          for (const byte of bytes) {
+            crc ^= byte;
+            for (let bit = 0; bit < 8; bit += 1) {
+              crc = (crc & 0x80) ? ((crc << 1) ^ 0x07) & 0xff : (crc << 1) & 0xff;
+            }
+          }
+          return crc;
+        }
+
         function encodePoolCode(text) {
           const bytes = new TextEncoder().encode(text);
+          const checksum = numberToPoolBase(BigInt(crc8(bytes)));
           const byteLength = numberToPoolBase(BigInt(bytes.length));
           const payload = numberToPoolBase(bytesToNumber(Array.from(bytes)));
-          return `${POOL_PREFIX}${POOL_VERSION} ${byteLength} ${payload}`;
+          return `${POOL_PREFIX}${POOL_VERSION} ${checksum} ${byteLength} ${payload}`;
         }
 
         function decodeOldPoolCode(text) {
@@ -473,24 +485,33 @@
           const bytePairs = hexString.match(/.{2}/g);
           if (!bytePairs) throw new Error('Old Pool Code has no decodable bytes.');
           const bytes = new Uint8Array(bytePairs.map(pair => parseInt(pair, 16)));
-          const decoded = new TextDecoder().decode(bytes);
-          if (containsReplacementCharacter(decoded)) {
-            throw new Error(INVALID_POOL_CODE_MESSAGE);
-          }
-          return decoded;
+          return new TextDecoder().decode(bytes);
         }
 
         function decodePoolCode(text) {
           const parts = splitWords(stripPoolPrefix(text));
-          const [, byteLengthText, payloadText] = parts;
+          const [version] = parts;
+
+          if (version === LEGACY_POOL_VERSION) {
+            const [, byteLengthText, payloadText] = parts;
+            const byteLength = Number(poolBaseToNumber(byteLengthText));
+            const payload = poolBaseToNumber(payloadText);
+            const bytes = numberToBytes(payload, byteLength);
+            return new TextDecoder().decode(bytes);
+          }
+
+          const [, checksumText, byteLengthText, payloadText] = parts;
+          const expectedChecksum = Number(poolBaseToNumber(checksumText));
+          if (!Number.isInteger(expectedChecksum) || expectedChecksum < 0 || expectedChecksum > 255) {
+            throw new Error('Pool Code checksum byte is invalid.');
+          }
           const byteLength = Number(poolBaseToNumber(byteLengthText));
           const payload = poolBaseToNumber(payloadText);
           const bytes = numberToBytes(payload, byteLength);
-          const decoded = new TextDecoder().decode(bytes);
-          if (containsReplacementCharacter(decoded)) {
-            throw new Error(INVALID_POOL_CODE_MESSAGE);
+          if (crc8(bytes) !== expectedChecksum) {
+            throw new Error(POOL_CODE_CHECKSUM_MESSAGE);
           }
-          return decoded;
+          return new TextDecoder().decode(bytes);
         }
 
         function decodeMorseCode(text) {
@@ -608,7 +629,7 @@
 
         function isOutputErrorMessage(message) {
           const normalizedMessage = message.trim();
-          return normalizedMessage === INVALID_POOL_CODE_MESSAGE;
+          return normalizedMessage === INVALID_POOL_CODE_MESSAGE || normalizedMessage === POOL_CODE_CHECKSUM_MESSAGE;
         }
 
         function appendOutputMessage(message) {
@@ -661,24 +682,10 @@
 
         function convertText(text) {
           if (!text.trim()) return '';
-
-          // Special error case as requested
-          const trimmed = text.trim();
-          if (trimmed === "Splash ! / @") {
-            return INVALID_POOL_CODE_MESSAGE;
-          }
-
           const discordChatLog = convertDiscordChatLog(text);
           if (discordChatLog !== null) return discordChatLog;
-
           const decodedMessage = tryDecodeMessage(text);
-          if (decodedMessage !== null) {
-            if (containsReplacementCharacter(decodedMessage)) {
-              return INVALID_POOL_CODE_MESSAGE;
-            }
-            return decodedMessage;
-          }
-          return encodePoolCode(text);
+          return decodedMessage !== null ? decodedMessage : encodePoolCode(text);
         }
 
         function convert() {
