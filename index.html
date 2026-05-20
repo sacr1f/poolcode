@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Pool Code Translator</title>
     <style>
         @font-face {
@@ -343,6 +346,10 @@
         const DISCORD_PREFIX_WITH_POOL_PATTERN = /(?:^|[\r\n])\[[^\]\r\n]+\][^\r\n]*?:\s*splash /i;
         const DISCORD_LINE_PATTERN = /^(\[[^\]\r\n]+\])\s*([^:\r\n]+:)(.*)$/;
         const DISCORD_BADGE_ONLY_LINE_PATTERN = /^\s*(?:\[[^\]\r\n]+\],\s*)+$/;
+        const DISCORD_MOBILE_TIMESTAMP_PATTERN_SOURCE = String.raw`(?:\d{1,2}:\d{2}|(?:Today|Yesterday) at \d{1,2}:\d{2}|\d{1,2}\/\d{1,2}\/\d{4}, \d{1,2}:\d{2})`;
+        const DISCORD_MOBILE_HEADER_PATTERN = new RegExp(String.raw`^\s*(\S(?:.*\S)?)\s+—\s+(${DISCORD_MOBILE_TIMESTAMP_PATTERN_SOURCE})\s*$`, 'u');
+        const DISCORD_MOBILE_SPLIT_USERNAME_PATTERN = /^\s*([^\s—](?:[^—\r\n]{0,78}[^\s—])?)\s*$/u;
+        const DISCORD_MOBILE_SPLIT_TIMESTAMP_PATTERN = new RegExp(String.raw`^\s*—\s+(${DISCORD_MOBILE_TIMESTAMP_PATTERN_SOURCE})\s*$`, 'u');
         const POOL_CODE_V2_PATTERN = /^†(\S+)\s+(\S+)\s+(\S+)$/u;
         const POOL_CODE_V1_PATTERN = /^&\s+(\S+)\s+(\S+)\s+(\S+)$/u;
         const POOL_CODE_V1_COMPACT_PATTERN = /^&(\S+)\s+(\S+)\s+(\S+)$/u;
@@ -728,6 +735,10 @@
           return `${timestamp} ${normalizeDiscordUsername(username)} `;
         }
 
+        function formatDiscordMobilePrefix(username, timestamp) {
+          return `[${timestamp}] ${normalizeDiscordUsername(username)} `;
+        }
+
         function convertDiscordLine(line) {
           const poolStart = findPoolPrefixIndex(line);
           if (poolStart === -1) return { decoded: false, text: line };
@@ -739,6 +750,27 @@
             console.warn('Discord line conversion failed.', error);
             const message = error.message === POOL_CODE_CHECKSUM_ERROR_MESSAGE ? POOL_CODE_CHECKSUM_ERROR_MESSAGE : INVALID_POOL_CODE_MESSAGE;
             return { decoded: true, text: formatDiscordPrefix(line.slice(0, poolStart)) + message };
+          }
+        }
+
+        function formatDiscordMobileMessage(username, timestamp, line) {
+          if (!line.trim()) return { formatted: false, text: line };
+
+          const poolStart = findPoolPrefixIndex(line);
+          if (poolStart === -1) {
+            return { formatted: true, text: formatDiscordMobilePrefix(username, timestamp) + line };
+          }
+
+          try {
+            const decoded = tryDecodeMessage(line.slice(poolStart));
+            if (decoded === null) {
+              return { formatted: true, text: formatDiscordMobilePrefix(username, timestamp) + line };
+            }
+            return { formatted: true, text: formatDiscordMobilePrefix(username, timestamp) + decoded };
+          } catch (error) {
+            console.warn('Discord mobile line conversion failed.', error);
+            const message = error.message === POOL_CODE_CHECKSUM_ERROR_MESSAGE ? POOL_CODE_CHECKSUM_ERROR_MESSAGE : INVALID_POOL_CODE_MESSAGE;
+            return { formatted: true, text: formatDiscordMobilePrefix(username, timestamp) + message };
           }
         }
 
@@ -758,6 +790,36 @@
             if (isDiscordBadgeOnlyLine(line)) {
               ignoredAny = true;
               continue;
+            }
+
+            const mobileHeader = line.match(DISCORD_MOBILE_HEADER_PATTERN);
+            const nextLine = parts[index + 2];
+            const nextLineBreak = parts[index + 3] || '';
+            if (mobileHeader && nextLine !== undefined) {
+              const [, username, timestamp] = mobileHeader;
+              const result = formatDiscordMobileMessage(username, timestamp, nextLine);
+              if (result.formatted) {
+                decodedAny = true;
+                converted.push(result.text, nextLineBreak);
+                index += 2;
+                continue;
+              }
+            }
+
+            const splitUsername = line.match(DISCORD_MOBILE_SPLIT_USERNAME_PATTERN);
+            const splitTimestamp = splitUsername && nextLine && nextLine.match(DISCORD_MOBILE_SPLIT_TIMESTAMP_PATTERN);
+            const splitMessageLine = parts[index + 4];
+            const splitMessageLineBreak = parts[index + 5] || '';
+            if (splitTimestamp && splitMessageLine !== undefined) {
+              const [, username] = splitUsername;
+              const [, timestamp] = splitTimestamp;
+              const result = formatDiscordMobileMessage(username, timestamp, splitMessageLine);
+              if (result.formatted) {
+                decodedAny = true;
+                converted.push(result.text, splitMessageLineBreak);
+                index += 4;
+                continue;
+              }
             }
 
             const result = convertDiscordLine(line);
