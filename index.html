@@ -21,6 +21,7 @@
 
         :root {
             --accent: #ffffff;
+            --textbox-text: #ffffff;
         }
 
         body {
@@ -97,7 +98,7 @@
             width: 100%;
             padding: 14px;
             background: #000000;
-            color: #ffffff;
+            color: var(--textbox-text);
             border: 1px solid var(--accent);
             font-family: "Determination Mono", monospace;
             box-sizing: border-box;
@@ -1103,6 +1104,7 @@
         function applyTheme(lang) {
             const accent = goldenSplashActive ? GOLDEN_SPLASH_COLOR : (lang === 'en' ? '#ffffff' : '#93b9e8');
             document.documentElement.style.setProperty('--accent', accent);
+            document.documentElement.style.setProperty('--textbox-text', goldenSplashActive ? GOLDEN_SPLASH_COLOR : '#ffffff');
             copyButton.classList.toggle('golden-shine', goldenSplashActive);
             renderInfoButton();
         }
