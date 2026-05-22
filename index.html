@@ -404,7 +404,7 @@
           '--..': 'Z', '-----': '0', '.----': '1', '..---': '2', '...--': '3',
           '....-': '4', '.....': '5', '-....': '6', '--...': '7', '---..': '8',
           '----.': '9', '.-.-.-': '.', '--..--': ',', '..--..': '?',
-          '.----.': "'", '-.-.--': '!', '-..-.': '/', '-.--.': '(', '-.--.-': ')',
+          '.----.': "'", '-.-!--': '!', '-..-.': '/', '-.--.': '(', '-.--.-': ')',
           '.-...': '&', '---...': ':', '-.-.-.': ';', '-...-': '=', '.-.-.': '+',
           '-....-': '-', '..--.-': '_', '.-..-.': '"', '...-..-': '$', '.--.-.': '@'
         };
@@ -591,7 +591,7 @@
         }
 
         function hasDisallowedControlCharacter(text) {
-          return /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/.test(text);
+          return /[-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/.test(text);
         }
 
         function validatePoolToken(text, codec = currentPoolCodec) {
@@ -967,7 +967,7 @@
                 modalBody: `<p>This tool automatically converts between normal text and Pool Code. It can also decode Morse code, making it easy to read older messages from the pool.</p>
                             <p>Just type or paste anything — it will detect the format and convert automatically.</p>
                             <p>It also supports Discord chat logs. Copy and paste multiple messages at once and they will all be decoded.</p>
-                            <p>Any issues, feel free to DM .sacr1f1ce.</p>
+                            <p>Any issues, feel free to DM <span style="color: #ffff00;">.sacr1f1ce</span>.</p>
                             <p>Happy splashing!</p>`
             },
             ja: {
@@ -984,7 +984,7 @@
                 modalBody: `<p>このツールは通常のテキストとPoolコードを自動的に変換します。また、モールス信号のデコードにも対応しているため、古いPoolのメッセージも簡単に読めます。</p>
                             <p>テキストを入力または貼り付けるだけで、形式を自動検出して変換します。</p>
                             <p>Discordのチャットログにも対応しています。複数のメッセージを一度にコピー＆ペーストすると、すべて自動でデコードされます。</p>
-                            <p>不具合などがあれば、.sacr1f1ceまでDMしてください。</p>
+                            <p>不具合などがあれば、<span style="color: #ffff00;">.sacr1f1ce</span>までDMしてください。</p>
                             <p>Happy splashing!</p>`
             }
         };
