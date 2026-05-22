@@ -21,7 +21,6 @@
 
         :root {
             --accent: #ffffff;
-            --textbox-text: #ffffff;
         }
 
         body {
@@ -98,7 +97,7 @@
             width: 100%;
             padding: 14px;
             background: #000000;
-            color: var(--textbox-text);
+            color: #ffffff;
             border: 1px solid var(--accent);
             font-family: "Determination Mono", monospace;
             box-sizing: border-box;
@@ -145,10 +144,6 @@
             color: #000000;
             border: none;
         }
-        #copyButton.golden-shine {
-            border: 1px solid #fff2a8;
-            box-shadow: 0 0 10px rgba(245, 197, 66, 0.5), inset 0 0 6px rgba(255, 242, 168, 0.35);
-        }
         #clearButton {
             flex: 1;
             padding: 16px;
@@ -178,12 +173,6 @@
             color: var(--accent);
             flex-shrink: 0;
             font-weight: bold;
-        }
-        .info-button img {
-            width: 28px;
-            height: 28px;
-            object-fit: contain;
-            display: block;
         }
         .info-button:hover {
             background: rgba(255,255,255,0.1);
@@ -274,7 +263,7 @@
 <body>
     <div class="terminal">
         <div class="header">
-            <h1 id="title">* sacr1f1ce & tictac's Pool Code Translator Test</h1>
+            <h1 id="title">* sacr1f1ce & tictac's Pool Code Translator</h1>
             
             <button id="infoButton" class="info-button" title="Info">i</button>
             
@@ -349,11 +338,9 @@
         const inputText = document.getElementById('inputText');
         const outputText = document.getElementById('outputText');
         const copyButton = document.getElementById('copyButton');
-        const infoButton = document.getElementById('infoButton');
 
         const POOL_PREFIX = 'Splash ';
         const POOL_PREFIX_LOWER = POOL_PREFIX.toLowerCase();
-        const POOL_CODE_V3_MARKER = '〰';
         const POOL_CODE_V2_MARKER = '†';
         const POOL_CODE_V1_MARKER = '&';
         const LEGACY_POOL_VERSION = '!';
@@ -361,12 +348,6 @@
         const POOL_CODE_CHECKSUM_ERROR_MESSAGE = 'Pool Code checksum does not match. Did you copy the full message?';
         const MAX_POOL_CODE_BYTE_LENGTH = 8192;
         const MAX_POOL_CODE_TOKEN_LENGTH = 20000;
-        const GOLDEN_SPLASH_CHANCE = 0.5;
-        const GOLDEN_SPLASH_COLOR = '#f5c542';
-        const GOLDEN_SPLASH_DURATION_MS = 5 * 60 * 1000;
-        const COPY_FEEDBACK_DURATION_MS = 1200;
-        const INFO_BUTTON_DEFAULT_TEXT = 'i';
-        const GOLDEN_SPLASH_INFO_ICON = 'favicon/web-app-manifest-192x192.png';
         const LINE_BREAK_PATTERN = /(\r\n|\n|\r)/;
         const DISCORD_PREFIX_WITH_POOL_PATTERN = /(?:^|[\r\n])\[[^\]\r\n]+\][^\r\n]*?:\s*splash /i;
         const DISCORD_LINE_PATTERN = /^(\[[^\]\r\n]+\])\s*([^:\r\n]+:)(.*)$/;
@@ -375,7 +356,6 @@
         const DISCORD_MOBILE_HEADER_PATTERN = new RegExp(String.raw`^\s*(\S(?:.*\S)?)\s+—\s+(${DISCORD_MOBILE_TIMESTAMP_PATTERN_SOURCE})\s*$`, 'u');
         const DISCORD_MOBILE_SPLIT_USERNAME_PATTERN = /^\s*([^\s—](?:[^—\r\n]{0,78}[^\s—])?)\s*$/u;
         const DISCORD_MOBILE_SPLIT_TIMESTAMP_PATTERN = new RegExp(String.raw`^\s*—\s+(${DISCORD_MOBILE_TIMESTAMP_PATTERN_SOURCE})\s*$`, 'u');
-        const POOL_CODE_V3_PATTERN = /^〰(\S+)$/u;
         const POOL_CODE_V2_PATTERN = /^†(\S+)\s+(\S+)\s+(\S+)$/u;
         const POOL_CODE_V1_PATTERN = /^&\s+(\S+)\s+(\S+)\s+(\S+)$/u;
         const POOL_CODE_V1_COMPACT_PATTERN = /^&(\S+)\s+(\S+)\s+(\S+)$/u;
@@ -397,18 +377,6 @@
 
         const poolAlphabetBase24 = ['-', '/', ':', ';', '@', '"', '.', ',', '?', '!', '\'', '[', ']', '{', '}', '#', '%', '•', '§', '¿', '&', '·', '…', '¡'];
         const poolAlphabetBase54 = ['-', '/', ':', ';', '@', '"', '.', ',', '?', '!', '\'', '[', ']', '{', '}', '#', '%', '•', '§', '¿', '&', '·', '…', '¡', '†', '¶', '‡', '‽', '«', '»', '‹', '›', '※', '⸮', '⁈', '⁋', '⁂', '⁘', '⁇', '⁙', '⹂', '゠', '⸱', '⸲', '⸳', '⁕', '⸸', '⹁', '⹃', '⹅', '⹇', '⹉', '⹋', '⹍'];
-        const poolAlphabetBase828 = Array.from([
-          "!\"#%&',-./:;?@[]{}¡§«¶·»¿;·՚՛՜՝՞՟։֊־׀׃׆׳״؉؊،؍؛؝؞؟٪٫٬٭۔܀܁܂܃܄܅܆܇܈܉܊܋܌܍߷߸߹࠰࠱࠲࠳࠴࠵࠶࠷࠸࠹࠺࠻࠼࠽࠾࡞।॥॰",
-          "৽੶૰౷಄෴๏๚๛༄༅༆༇༈༉༊་༌།༎༏༐༑༒༔༺༻༼༽྅࿐࿑࿒࿓࿔࿙࿚၊။၌၍၎၏჻፠፡።፣፤፥፦፧፨᐀᙮᚛᚜᛫᛬᛭᜵᜶។៕៖៘៙៚᠀᠁᠂᠃᠄᠅᠆᠇᠈᠉᠊᥄᥅᨞᨟᪠᪡᪢᪣᪤᪥᪦",
-          "᪨᪩᪪᪫᪬᪭᭚᭛᭜᭝᭞᭟᭠᯼᯽᯾᯿᰻᰼᰽᰾᰿᱾᱿᳀᳁᳂᳃᳄᳅᳆᳇᳓‐‑‒–—―‖‗‘’‚‛“”„‟†‡•‣․‥…‧‰‱′″‴‵‶‷‸‹›※‼‽‾‿⁀⁁⁂⁃⁅⁆⁇⁈⁉⁊⁋⁌⁍⁎⁏⁐⁑",
-          "⁓⁔⁕⁖⁗⁘⁙⁚⁛⁜⁝⁞⁽⁾₍₎⌈⌉⌊⌋〈〉❨❩❪❫❬❭❮❯❰❱❲❳❴❵⟅⟆⟦⟧⟨⟩⟪⟫⟬⟭⟮⟯⦃⦄⦅⦆⦇⦈⦉⦊⦋⦌⦍⦎⦏⦐⦑⦒⦓⦔⦕⦖⦗⦘⧘⧙⧚⧛⧼⧽⳹⳺⳻⳼⳾⳿⵰⸀⸁⸂⸃⸄⸅⸆",
-          "⸇⸈⸉⸊⸋⸌⸍⸎⸏⸐⸑⸒⸓⸔⸕⸖⸗⸘⸙⸚⸛⸜⸝⸞⸟⸠⸡⸢⸣⸤⸥⸦⸧⸨⸩⸪⸫⸬⸭⸮⸰⸱⸲⸳⸴⸵⸶⸷⸸⸹⸼⸽⸾⸿⹀⹁⹂⹃⹄⹅⹆⹇⹈⹉⹊⹋⹌⹍⹎⹏⹒⹓⹔⹕⹖⹗⹘⹙⹚⹛⹜⹝、。〃〈〉《》「",
-          "」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〽゠・꓾꓿꘍꘎꘏꙳꙾꛲꛳꛴꛵꛶꛷꡴꡵꡶꡷꣎꣏꣸꣹꣺꣼꤮꤯꥟꧆꧇꧈꧉꧊꧋꧌꧍꧞꧟꩜꩝꩞꩟꫞꫟꫰꫱꯫﴾﴿︐︑︒︓︔︕︖︗︘︙︰︱︲︳︴︵︶︷︸︹︺︻",
-          "︼︽︾︿﹀﹁﹂﹃﹄﹅﹆﹇﹈﹉﹊﹋﹌﹍﹎﹏﹐﹑﹒﹔﹕﹖﹗﹘﹙﹚﹛﹜﹝﹞﹟﹠﹡﹣﹨﹪﹫！＂＃％＆＇（）＊，－．／：；？＠［＼］＿｛｝｟｠｡｢｣､･𐄀𐄁𐄂𐎟𐏐𐕯𐡗𐤟𐤿𐩐𐩑𐩒𐩓𐩔𐩕𐩖𐩗𐩘𐩿",
-          "𐫰𐫱𐫲𐫳𐫴𐫵𐫶𐬹𐬺𐬻𐬼𐬽𐬾𐬿𐮙𐮚𐮛𐮜𐺭𐽕𐽖𐽗𐽘𐽙𐾆𐾇𐾈𐾉𑁇𑁈𑁉𑁊𑁋𑁌𑁍𑂻𑂼𑂾𑂿𑃀𑃁𑅀𑅁𑅂𑅃𑅴𑅵𑇅𑇆𑇇𑇈𑇍𑇛𑇝𑇞𑇟𑈸𑈹𑈺𑈻𑈼𑈽𑊩𑑋𑑌𑑍𑑎𑑏𑑚𑑛𑑝𑓆𑗁𑗂𑗃𑗄𑗅𑗆𑗇𑗈𑗉𑗊𑗋𑗌𑗍𑗎𑗏𑗐𑗑𑗒",
-          "𑗓𑗔𑗕𑗖𑗗𑙁𑙂𑙃𑙠𑙡𑙢𑙣𑙤𑙥𑙦𑙧𑙨𑙩𑙪𑙫𑙬𑚹𑜼𑜽𑜾𑠻𑥄𑥅𑥆𑧢𑨿𑩀𑩁𑩂𑩃𑩄𑩅𑩆𑪚𑪛𑪜𑪞𑪟𑪠𑪡𑪢𑬀𑬁𑬂𑬃𑬄𑬅𑬆𑬇𑬈𑬉𑱁𑱂𑱃𑱄𑱅𑱰𑱱𑻷𑻸𑽃𑽄𑽅𑽆𑽇𑽈𑽉𑽊𑽋𑽌𑽍𑽎𑽏𑿿𒑰𒑱𒑲𒑳𒑴𒿱𒿲𖩮𖩯𖫵𖬷",
-          "𖬸𖬹𖬺𖬻𖭄𖺗𖺘𖺙𖺚𖿢𛲟𝪇𝪈𝪉𝪊𝪋𞥞𞥟",
-        ].join(''));
 
         function createPoolCodec(name, version, alphabet, hasChecksum) {
           return {
@@ -421,11 +389,10 @@
           };
         }
 
-        const currentPoolCodec = createPoolCodec('v3', POOL_CODE_V3_MARKER, poolAlphabetBase828, true);
-        const v2PoolCodec = createPoolCodec('v2', POOL_CODE_V2_MARKER, poolAlphabetBase54, true);
-        const v1PoolCodec = createPoolCodec('v1', POOL_CODE_V1_MARKER, poolAlphabetBase24, true);
+        const currentPoolCodec = createPoolCodec('v2', POOL_CODE_V2_MARKER, poolAlphabetBase54, true);
+        const v1PoolCodec = createPoolCodec('current', POOL_CODE_V1_MARKER, poolAlphabetBase24, true);
         const legacyPoolCodec = createPoolCodec('legacy', LEGACY_POOL_VERSION, poolAlphabetBase24, false);
-        const versionedPoolCodecs = [currentPoolCodec, v2PoolCodec, v1PoolCodec, legacyPoolCodec];
+        const versionedPoolCodecs = [currentPoolCodec, v1PoolCodec, legacyPoolCodec];
         const strictUtf8Decoder = new TextDecoder('utf-8', { fatal: true });
 
         const morseToChar = {
@@ -437,7 +404,7 @@
           '--..': 'Z', '-----': '0', '.----': '1', '..---': '2', '...--': '3',
           '....-': '4', '.....': '5', '-....': '6', '--...': '7', '---..': '8',
           '----.': '9', '.-.-.-': '.', '--..--': ',', '..--..': '?',
-          '.----.': "'", '-.-.--': '!', '-..-.': '/', '-.--.': '(', '-.--.-': ')',
+          '.----.': "'", '-.-!--': '!', '-..-.': '/', '-.--.': '(', '-.--.-': ')',
           '.-...': '&', '---...': ':', '-.-.-.': ';', '-...-': '=', '.-.-.': '+',
           '-....-': '-', '..--.-': '_', '.-..-.': '"', '...-..-': '$', '.--.-.': '@'
         };
@@ -464,10 +431,6 @@
           return text.trim().split(/\s+/).filter(Boolean);
         }
 
-        function poolTokenLength(text) {
-          return Array.from(text).length;
-        }
-
         function hasOnlyPoolAlphabetChars(text, codec = currentPoolCodec) {
           return Array.from(text).every((char) => codec.charToValue.has(char));
         }
@@ -483,22 +446,12 @@
 
           const body = stripPoolPrefix(text).trim();
           const startsWithVersion = versionedPoolCodecs.some((codec) => body.startsWith(codec.version));
-          let match = body.match(POOL_CODE_V3_PATTERN);
-
-          if (match) {
-            return {
-              format: 'packed',
-              codec: currentPoolCodec,
-              payloadText: match[1]
-            };
-          }
-
-          match = body.match(POOL_CODE_V2_PATTERN);
+          let match = body.match(POOL_CODE_V2_PATTERN);
 
           if (match) {
             return {
               format: 'current',
-              codec: v2PoolCodec,
+              codec: currentPoolCodec,
               checksumText: match[1],
               byteLengthText: match[2],
               payloadText: match[3]
@@ -595,7 +548,7 @@
         }
 
         function poolBaseToNumber(text, codec = currentPoolCodec) {
-          if (poolTokenLength(text) === 0 || poolTokenLength(text) > MAX_POOL_CODE_TOKEN_LENGTH) {
+          if (text.length === 0 || text.length > MAX_POOL_CODE_TOKEN_LENGTH) {
             throw new Error(INVALID_POOL_CODE_MESSAGE);
           }
           return Array.from(text).reduce((number, char) => {
@@ -623,19 +576,6 @@
           return bytes;
         }
 
-        function numberToMinimalBytes(number) {
-          if (number < 0n) throw new Error(INVALID_POOL_CODE_MESSAGE);
-          if (number === 0n) return new Uint8Array();
-
-          const bytes = [];
-          let remaining = number;
-          while (remaining > 0n) {
-            bytes.push(Number(remaining & 0xffn));
-            remaining >>= 8n;
-          }
-          return new Uint8Array(bytes.reverse());
-        }
-
         function hasUnpairedSurrogate(text) {
           for (let index = 0; index < text.length; index += 1) {
             const code = text.charCodeAt(index);
@@ -651,11 +591,11 @@
         }
 
         function hasDisallowedControlCharacter(text) {
-          return /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/.test(text);
+          return /[-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/.test(text);
         }
 
         function validatePoolToken(text, codec = currentPoolCodec) {
-          if (!text || poolTokenLength(text) > MAX_POOL_CODE_TOKEN_LENGTH || !hasOnlyPoolAlphabetChars(text, codec)) {
+          if (!text || text.length > MAX_POOL_CODE_TOKEN_LENGTH || !hasOnlyPoolAlphabetChars(text, codec)) {
             throw new Error(INVALID_POOL_CODE_MESSAGE);
           }
         }
@@ -666,7 +606,7 @@
         }
 
         function decodeByteLength(text, codec = currentPoolCodec) {
-          if (poolTokenLength(text) > 4) throw new Error(INVALID_POOL_CODE_MESSAGE);
+          if (text.length > 4) throw new Error(INVALID_POOL_CODE_MESSAGE);
           const byteLength = decodePoolNumber(text, codec);
           if (byteLength > BigInt(MAX_POOL_CODE_BYTE_LENGTH)) {
             throw new Error(INVALID_POOL_CODE_MESSAGE);
@@ -677,7 +617,7 @@
         function validatePayloadSize(payloadText, byteLength, codec = currentPoolCodec) {
           const bitsPerPoolCharacter = Math.log2(Number(codec.base));
           const maxPayloadLength = Math.max(1, Math.ceil((byteLength * 8) / bitsPerPoolCharacter) + 2);
-          if (poolTokenLength(payloadText) > maxPayloadLength) {
+          if (payloadText.length > maxPayloadLength) {
             throw new Error(INVALID_POOL_CODE_MESSAGE);
           }
         }
@@ -707,20 +647,14 @@
           return crc;
         }
 
-        function encodePackedPoolToken(bytes) {
-          const data = new Uint8Array(bytes.length + 1);
-          data[0] = 0x01;
-          data.set(bytes, 1);
-
-          const packed = (bytesToNumber(data) << 8n) | BigInt(crc8(bytes));
-          return numberToPoolBase(packed, currentPoolCodec);
-        }
-
         function encodePoolCode(text) {
           if (hasUnpairedSurrogate(text)) throw new Error('Input contains an invalid Unicode character.');
           const bytes = new TextEncoder().encode(text);
           if (bytes.length > MAX_POOL_CODE_BYTE_LENGTH) throw new Error('Message is too long to encode as Pool Code.');
-          return `${POOL_PREFIX}${POOL_CODE_V3_MARKER}${encodePackedPoolToken(bytes)}`;
+          const checksum = numberToPoolBase(BigInt(crc8(bytes)), currentPoolCodec);
+          const byteLength = numberToPoolBase(BigInt(bytes.length), currentPoolCodec);
+          const payload = numberToPoolBase(bytesToNumber(Array.from(bytes)), currentPoolCodec);
+          return `${POOL_PREFIX}${POOL_CODE_V2_MARKER}${checksum} ${byteLength} ${payload}`;
         }
 
         function decodeOldPoolCode(poolCode) {
@@ -732,30 +666,9 @@
           return decodeUtf8(bytes);
         }
 
-        function decodePackedPoolCode(poolCode) {
-          const codec = poolCode.codec || currentPoolCodec;
-          const packed = decodePoolNumber(poolCode.payloadText, codec);
-          const expectedChecksum = Number(packed & 0xffn);
-          const data = numberToMinimalBytes(packed >> 8n);
-
-          if (data.length < 1 || data.length > MAX_POOL_CODE_BYTE_LENGTH + 1 || data[0] !== 0x01) {
-            throw new Error(INVALID_POOL_CODE_MESSAGE);
-          }
-
-          const bytes = data.slice(1);
-          if (crc8(bytes) !== expectedChecksum) {
-            throw new Error(POOL_CODE_CHECKSUM_ERROR_MESSAGE);
-          }
-          return decodeUtf8(bytes, { allowControlCharacters: true });
-        }
-
         function decodePoolCode(poolCode) {
           if (poolCode.format === 'invalid') throw new Error(INVALID_POOL_CODE_MESSAGE);
           const codec = poolCode.codec || currentPoolCodec;
-
-          if (poolCode.format === 'packed') {
-            return decodePackedPoolCode(poolCode);
-          }
 
           if (poolCode.format === 'legacy') {
             const byteLength = decodeByteLength(poolCode.byteLengthText, codec);
@@ -765,7 +678,7 @@
             return decodeUtf8(bytes);
           }
 
-          if (poolTokenLength(poolCode.checksumText) > 2) throw new Error(INVALID_POOL_CODE_MESSAGE);
+          if (poolCode.checksumText.length > 2) throw new Error(INVALID_POOL_CODE_MESSAGE);
           const expectedChecksum = Number(decodePoolNumber(poolCode.checksumText, codec));
           if (!Number.isInteger(expectedChecksum) || expectedChecksum < 0 || expectedChecksum > 255) {
             throw new Error(INVALID_POOL_CODE_MESSAGE);
@@ -1027,32 +940,12 @@
           }
         }
 
-        function setCopyFeedback(isGoldenSplash, shouldStartGoldenSplash = isGoldenSplash) {
-          if (copyFeedbackTimeout !== null) {
-            clearTimeout(copyFeedbackTimeout);
-          }
-
-          copyButton.textContent = isGoldenSplash ? 'Golden Splash!' : 'Splash!';
-          if (shouldStartGoldenSplash) {
-            startGoldenSplashTheme();
-          }
-
-          copyFeedbackTimeout = setTimeout(() => {
-            copyButton.textContent = translations[currentLang].copyButton;
-            applyTheme(currentLang);
-            copyFeedbackTimeout = null;
-          }, COPY_FEEDBACK_DURATION_MS);
-        }
-
         async function copyOutput() {
           if (!outputValue) return;
           try {
             await navigator.clipboard.writeText(outputValue);
-            if (goldenSplashActive) {
-              setCopyFeedback(true, false);
-              return;
-            }
-            setCopyFeedback(Math.random() < GOLDEN_SPLASH_CHANCE);
+            copyButton.textContent = 'Splash!';
+            setTimeout(() => { copyButton.textContent = translations[currentLang].copyButton; }, 1200);
           } catch (error) {
             console.error('Copy failed.', error);
           }
@@ -1074,7 +967,7 @@
                 modalBody: `<p>This tool automatically converts between normal text and Pool Code. It can also decode Morse code, making it easy to read older messages from the pool.</p>
                             <p>Just type or paste anything — it will detect the format and convert automatically.</p>
                             <p>It also supports Discord chat logs. Copy and paste multiple messages at once and they will all be decoded.</p>
-                            <p>Any issues, feel free to DM .sacr1f1ce.</p>
+                            <p>Any issues, feel free to DM <span style="color: #ffff00;">.sacr1f1ce</span>.</p>
                             <p>Happy splashing!</p>`
             },
             ja: {
@@ -1097,41 +990,10 @@
         };
 
         let currentLang = 'en';
-        let copyFeedbackTimeout = null;
-        let goldenSplashActive = false;
-        let goldenSplashTimeout = null;
 
         function applyTheme(lang) {
-            const accent = goldenSplashActive ? GOLDEN_SPLASH_COLOR : (lang === 'en' ? '#ffffff' : '#93b9e8');
+            const accent = lang === 'en' ? '#ffffff' : '#93b9e8';
             document.documentElement.style.setProperty('--accent', accent);
-            document.documentElement.style.setProperty('--textbox-text', goldenSplashActive ? GOLDEN_SPLASH_COLOR : '#ffffff');
-            copyButton.classList.toggle('golden-shine', goldenSplashActive);
-            renderInfoButton();
-        }
-
-        function renderInfoButton() {
-            if (goldenSplashActive) {
-                infoButton.replaceChildren();
-                const icon = document.createElement('img');
-                icon.src = GOLDEN_SPLASH_INFO_ICON;
-                icon.alt = 'Info';
-                infoButton.append(icon);
-                return;
-            }
-            infoButton.textContent = INFO_BUTTON_DEFAULT_TEXT;
-        }
-
-        function startGoldenSplashTheme() {
-            goldenSplashActive = true;
-            applyTheme(currentLang);
-            if (goldenSplashTimeout !== null) {
-                clearTimeout(goldenSplashTimeout);
-            }
-            goldenSplashTimeout = setTimeout(() => {
-                goldenSplashActive = false;
-                goldenSplashTimeout = null;
-                applyTheme(currentLang);
-            }, GOLDEN_SPLASH_DURATION_MS);
         }
 
         function switchLanguage(lang) {
@@ -1177,7 +1039,7 @@
         copyButton.addEventListener('click', copyOutput);
         clearButton.addEventListener('click', clearAll);
         inputText.addEventListener('input', convert);
-        infoButton.addEventListener('click', showInfo);
+        document.getElementById('infoButton').addEventListener('click', showInfo);
 
         // === KONAMI CODE EASTER EGG ===
         // ↑ ↑ ↓ ↓ ← → ← → B A
