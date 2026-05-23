@@ -6,6 +6,9 @@
     <link rel="shortcut icon" href="favicon/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-title" content="Pool Code" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="manifest" href="favicon/site.webmanifest" />
     <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -168,6 +171,180 @@
             outline-offset: 0;
         }
 
+        .design-switch {
+            background: #000000;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 9px 12px;
+            font-size: 0.95em;
+            line-height: 1;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        html[data-design="linear"] body {
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            font-feature-settings: "cv01", "ss03";
+            background:
+                radial-gradient(circle at 50% -10%, rgba(113, 112, 255, 0.22), transparent 34rem),
+                radial-gradient(circle at 0% 100%, rgba(94, 106, 210, 0.10), transparent 28rem),
+                #08090a;
+            color: #f7f8f8;
+            gap: 22px;
+        }
+
+        html[data-design="linear"] .terminal {
+            background: rgba(15, 16, 17, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            box-shadow:
+                rgba(0, 0, 0, 0.42) 0 24px 80px,
+                rgba(255, 255, 255, 0.04) 0 1px 0 inset;
+            padding: 28px;
+            backdrop-filter: blur(18px);
+        }
+
+        html[data-design="linear"] .header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 16px;
+            margin-bottom: 18px;
+        }
+
+        html[data-design="linear"] h1 {
+            border-bottom: 0;
+            padding-bottom: 0;
+            font-weight: 510;
+            letter-spacing: -0.704px;
+            color: #f7f8f8;
+        }
+
+        html[data-design="linear"] label {
+            color: #d0d6e0;
+            font-size: 0.95em;
+            font-weight: 510;
+            letter-spacing: -0.13px;
+        }
+
+        html[data-design="linear"] textarea,
+        html[data-design="linear"] .output-text {
+            font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            background: rgba(255, 255, 255, 0.02);
+            color: #f7f8f8;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            box-shadow: rgba(0, 0, 0, 0.20) 0 0 12px inset;
+            font-size: 1.05em;
+            line-height: 1.5;
+        }
+
+        html[data-design="linear"] textarea::placeholder {
+            color: #8a8f98;
+        }
+
+        html[data-design="linear"] button {
+            font-family: 'Inter', system-ui, sans-serif;
+            font-weight: 510;
+            border-radius: 6px;
+            transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+        }
+
+        html[data-design="linear"] button:hover {
+            filter: none;
+            transform: translateY(-1px);
+        }
+
+        html[data-design="linear"] #copyButton {
+            background: #5e6ad2;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        html[data-design="linear"] #copyButton:hover {
+            background: #7170ff;
+        }
+
+        html[data-design="linear"] #clearButton,
+        html[data-design="linear"] .design-switch {
+            background: rgba(255, 255, 255, 0.02);
+            color: #d0d6e0;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        html[data-design="linear"] #clearButton:hover,
+        html[data-design="linear"] .design-switch:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #f7f8f8;
+        }
+
+        html[data-design="linear"] .info-button {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #f7f8f8;
+        }
+
+        html[data-design="linear"] .flag-container {
+            border-width: 1px;
+            border-color: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        html[data-design="linear"] .flag-container.active {
+            border-color: #7170ff;
+            box-shadow: rgba(113, 112, 255, 0.24) 0 0 0 3px;
+        }
+
+        html[data-design="linear"] .credits,
+        html[data-design="linear"] .twitch {
+            font-family: 'Inter', system-ui, sans-serif;
+            color: #8a8f98;
+            font-size: 0.9em;
+        }
+
+        html[data-design="linear"] .credits a,
+        html[data-design="linear"] .twitch a {
+            color: #d0d6e0;
+            border-bottom-color: rgba(255, 255, 255, 0.18);
+        }
+
+        html[data-design="linear"] .modal {
+            background: rgba(0, 0, 0, 0.85);
+        }
+
+        html[data-design="linear"] .modal-content {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #191a1b;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            color: #d0d6e0;
+            box-shadow: rgba(0, 0, 0, 0.45) 0 24px 80px;
+        }
+
+        html[data-design="linear"] .modal-content h2 {
+            color: #f7f8f8;
+            font-weight: 510;
+            letter-spacing: -0.288px;
+        }
+
+        html[data-design="linear"] textarea:focus,
+        html[data-design="linear"] .output-text:focus,
+        html[data-design="linear"] button:focus {
+            outline: none;
+            box-shadow:
+                rgba(113, 112, 255, 0.32) 0 0 0 3px,
+                rgba(0, 0, 0, 0.20) 0 0 12px inset;
+        }
+
+        @media (max-width: 720px) {
+            .design-switch {
+                order: 2;
+            }
+
+            html[data-design="linear"] .terminal {
+                border-radius: 14px;
+                padding: 18px;
+            }
+        }
+
         .info-button {
             background: transparent;
             border: 2px solid var(--accent);
@@ -280,6 +457,7 @@
         <div class="header">
             <h1 id="title">* sacr1f1ce & tictac's Pool Code Translator</h1>
             
+            <button id="designButton" class="design-switch" type="button" title="Switch design">Linear Mode</button>
             <button id="infoButton" class="info-button" title="Info">i</button>
             
             <div class="lang-switch">
@@ -353,7 +531,9 @@
         const inputText = document.getElementById('inputText');
         const outputText = document.getElementById('outputText');
         const copyButton = document.getElementById('copyButton');
+        const clearButton = document.getElementById('clearButton');
         const infoButton = document.getElementById('infoButton');
+        const designButton = document.getElementById('designButton');
 
         const POOL_PREFIX = 'Splash ';
         const POOL_PREFIX_LOWER = POOL_PREFIX.toLowerCase();
@@ -369,6 +549,7 @@
         const GOLDEN_SPLASH_COLOR = '#ffdf4f';
         const GOLDEN_SPLASH_DURATION_MS = 5 * 60 * 1000;
         const COPY_FEEDBACK_DURATION_MS = 1200;
+        const DESIGN_STORAGE_KEY = 'poolCodeDesign';
         const INFO_BUTTON_DEFAULT_TEXT = 'i';
         const GOLDEN_SPLASH_INFO_ICON = 'favicon/web-app-manifest-192x192.png';
         const LINE_BREAK_PATTERN = /(\r\n|\n|\r)/;
@@ -1073,6 +1254,8 @@
                 outputPlaceholder: "Result appears here",
                 copyButton: "Copy Output",
                 clearButton: "Clear",
+                switchToLinear: "Linear Mode",
+                switchToRetro: "Retro Mode",
                 credits: `Made with ❤️ by <a href="https://linktr.ee/sacr1f1ce" target="_blank" rel="noopener">sacr1f1ce</a> &amp; <a href="https://github.com/tictac09" target="_blank" rel="noopener">tictac</a>`,
                 twitch: `Follow <a href="https://twitch.tv/itboji" target="_blank" rel="noopener">itboji</a> on Twitch!`,
                 modalTitle: "About Pool Code Translator",
@@ -1090,6 +1273,8 @@
                 outputPlaceholder: "結果がここに表示されます",
                 copyButton: "出力をコピー",
                 clearButton: "クリア",
+                switchToLinear: "Linearモード",
+                switchToRetro: "レトロモード",
                 credits: `<a href="https://linktr.ee/sacr1f1ce" target="_blank" rel="noopener">sacr1f1ce</a> &amp; <a href="https://github.com/tictac09" target="_blank" rel="noopener">tictac</a> が❤️を込めて制作`,
                 twitch: `Twitchで <a href="https://twitch.tv/itboji" target="_blank" rel="noopener">itboji</a> をフォロー！`,
                 modalTitle: "Poolコード翻訳機とは？",
@@ -1102,16 +1287,35 @@
         };
 
         let currentLang = 'en';
+        let currentDesign = localStorage.getItem(DESIGN_STORAGE_KEY) === 'linear' ? 'linear' : 'retro';
         let copyFeedbackTimeout = null;
         let goldenSplashActive = false;
         let goldenSplashTimeout = null;
 
         function applyTheme(lang) {
-            const accent = goldenSplashActive ? GOLDEN_SPLASH_COLOR : (lang === 'en' ? '#ffffff' : '#93b9e8');
+            const accent = goldenSplashActive
+                ? GOLDEN_SPLASH_COLOR
+                : (currentDesign === 'linear' ? '#7170ff' : (lang === 'en' ? '#ffffff' : '#93b9e8'));
+            const textboxText = goldenSplashActive ? GOLDEN_SPLASH_COLOR : (currentDesign === 'linear' ? '#f7f8f8' : '#ffffff');
             document.documentElement.style.setProperty('--accent', accent);
-            document.documentElement.style.setProperty('--textbox-text', goldenSplashActive ? GOLDEN_SPLASH_COLOR : '#ffffff');
+            document.documentElement.style.setProperty('--textbox-text', textboxText);
             copyButton.classList.toggle('golden-shine', goldenSplashActive);
+            document.documentElement.dataset.design = currentDesign;
+            renderDesignButton();
             renderInfoButton();
+        }
+
+        function renderDesignButton() {
+            const t = translations[currentLang];
+            designButton.textContent = currentDesign === 'linear' ? t.switchToRetro : t.switchToLinear;
+            designButton.setAttribute('aria-pressed', String(currentDesign === 'linear'));
+            designButton.title = currentDesign === 'linear' ? 'Switch to the original retro design' : 'Switch to the Linear-inspired design';
+        }
+
+        function toggleDesign() {
+            currentDesign = currentDesign === 'linear' ? 'retro' : 'linear';
+            localStorage.setItem(DESIGN_STORAGE_KEY, currentDesign);
+            applyTheme(currentLang);
         }
 
         function renderInfoButton() {
@@ -1153,6 +1357,7 @@
             outputText.dataset.placeholder = t.outputPlaceholder;
             copyButton.textContent = t.copyButton;
             clearButton.textContent = t.clearButton;
+            renderDesignButton();
 
             document.getElementById('credits').innerHTML = t.credits;
             document.getElementById('twitch').innerHTML = t.twitch;
@@ -1181,6 +1386,7 @@
         // Event listeners
         copyButton.addEventListener('click', copyOutput);
         clearButton.addEventListener('click', clearAll);
+        designButton.addEventListener('click', toggleDesign);
         inputText.addEventListener('input', convert);
         infoButton.addEventListener('click', showInfo);
 
