@@ -656,7 +656,7 @@
         }
 
         function hasDisallowedControlCharacter(text) {
-          return /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/.test(text);
+          return /[-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/.test(text);
         }
 
         function validatePoolToken(text, codec = currentPoolCodec) {
@@ -1063,7 +1063,7 @@
           }
         }
 
-        // Translations
+        // TRANSLATIONS
         const translations = {
             en: {
                 title: "* sacr1f1ce & tictac's Pool Code Translator",
@@ -1178,14 +1178,13 @@
             document.getElementById('infoModal').style.display = 'none';
         }
 
-        // Event listeners
+        // EVENT LISTENERS
         copyButton.addEventListener('click', copyOutput);
         clearButton.addEventListener('click', clearAll);
         inputText.addEventListener('input', convert);
         infoButton.addEventListener('click', showInfo);
 
         // === KONAMI CODE EASTER EGG ===
-        // ↑ ↑ ↓ ↓ ← → ← → B A
         const konamiSequence = [
             'ArrowUp', 'ArrowUp',
             'ArrowDown', 'ArrowDown',
@@ -1209,7 +1208,7 @@
         }
 
         document.addEventListener('keydown', (event) => {
-            // Compare arrow keys directly, letters case-insensitively
+            // COMPARE ARROW KEYS DIRECTLY, LETTERS CASE-INSENSITIVELY
             const expected = konamiSequence[konamiProgress];
             const key = event.key;
             const isMatch = expected.startsWith('Arrow')
@@ -1223,14 +1222,18 @@
                     playOhYes();
                 }
             } else {
-                // Allow restarting if the wrong key was the start of the sequence
+                // ALLOW RESTARTING IF THE WRONG KEY WAS THE START OF THE SEQUENCE
                 konamiProgress = (key === konamiSequence[0]) ? 1 : 0;
             }
         });
 
-        // Initialize
+        const userLang = ((navigator.languages && navigator.languages[0]) || navigator.language || 'en').toLowerCase();
+        if (userLang.startsWith('ja')) {
+            switchLanguage('ja');
+        } else {
+            switchLanguage('en');
+        }
         convert();
-        applyTheme('en');
     </script>
 </body>
 </html>
