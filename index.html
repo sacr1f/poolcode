@@ -656,7 +656,7 @@
         }
 
         function hasDisallowedControlCharacter(text) {
-          return /[-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/.test(text);
+          return /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/.test(text);
         }
 
         function validatePoolToken(text, codec = currentPoolCodec) {
