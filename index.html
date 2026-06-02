@@ -348,7 +348,6 @@
     <audio id="ohYesAudio" src="ohyes.mp3" preload="auto"></audio>
 
     <script>
-        // === TICTAC'S ADVANCED CODE ===
         const inputText = document.getElementById('inputText');
         const outputText = document.getElementById('outputText');
         const copyButton = document.getElementById('copyButton');
@@ -1063,7 +1062,6 @@
           }
         }
 
-        // TRANSLATIONS
         const translations = {
             en: {
                 title: "* sacr1f1ce & tictac's Pool Code Translator",
@@ -1178,13 +1176,11 @@
             document.getElementById('infoModal').style.display = 'none';
         }
 
-        // EVENT LISTENERS
         copyButton.addEventListener('click', copyOutput);
         clearButton.addEventListener('click', clearAll);
         inputText.addEventListener('input', convert);
         infoButton.addEventListener('click', showInfo);
 
-        // === KONAMI CODE EASTER EGG ===
         const konamiSequence = [
             'ArrowUp', 'ArrowUp',
             'ArrowDown', 'ArrowDown',
@@ -1208,7 +1204,6 @@
         }
 
         document.addEventListener('keydown', (event) => {
-            // COMPARE ARROW KEYS DIRECTLY, LETTERS CASE-INSENSITIVELY
             const expected = konamiSequence[konamiProgress];
             const key = event.key;
             const isMatch = expected.startsWith('Arrow')
@@ -1222,7 +1217,6 @@
                     playOhYes();
                 }
             } else {
-                // ALLOW RESTARTING IF THE WRONG KEY WAS THE START OF THE SEQUENCE
                 konamiProgress = (key === konamiSequence[0]) ? 1 : 0;
             }
         });
