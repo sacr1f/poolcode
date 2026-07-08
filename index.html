@@ -202,28 +202,18 @@
             cursor: pointer;
             padding: 4px;
             border: 2px solid transparent;
-            transition: transform 0.2s ease;
+            transition: all 0.2s ease;
             border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
         }
-        .flag-container.active::after {
-            content: "";
-            position: absolute;
-            inset: -2px;
-            border: 2px solid var(--accent);
-            border-radius: 4px;
-            transition: border-color 0.2s ease;
-            pointer-events: none;
+        .flag-container.active {
+            border-color: var(--accent);
         }
         .flag-container:hover {
             transform: scale(1.08);
         }
-        .flag-container.active:hover {
-            transform: none;
-            }
         .bottom-section {
             min-height: 82px;
             display: flex;
