@@ -344,7 +344,7 @@
         </div>
     </div>
 
-    <audio id="ohYesAudio" src="ohyes.mp3" preload="auto"></audio>
+    <audio id="snd_coolAudio" src="snd_cool.mp3" preload="auto"></audio>
 
     <script>
         const inputText = document.getElementById('inputText');
@@ -1204,17 +1204,17 @@
             'b', 'a'
         ];
         let konamiProgress = 0;
-        const ohYesAudio = document.getElementById('ohYesAudio');
+        const snd_coolAudio = document.getElementById('snd_coolAudio');
 
-        function playOhYes() {
+        function playsnd_cool() {
             try {
-                ohYesAudio.currentTime = 0;
-                const playPromise = ohYesAudio.play();
+                snd_coolAudio.currentTime = 0;
+                const playPromise = snd_coolAudio.play();
                 if (playPromise && typeof playPromise.catch === 'function') {
                     playPromise.catch((err) => console.warn('Audio playback blocked or failed:', err));
                 }
             } catch (err) {
-                console.warn('Could not play ohyes.mp3:', err);
+                console.warn('Could not play snd_cool.mp3:', err);
             }
         }
 
@@ -1229,7 +1229,7 @@
                 konamiProgress++;
                 if (konamiProgress === konamiSequence.length) {
                     konamiProgress = 0;
-                    playOhYes();
+                    playsnd_cool();
                 }
             } else {
                 konamiProgress = (key === konamiSequence[0]) ? 1 : 0;
