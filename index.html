@@ -360,6 +360,7 @@
         const LEGACY_POOL_VERSION = '!';
         const INVALID_POOL_CODE_MESSAGE = 'Invalid or incomplete Pool Code.';
         const POOL_CODE_CHECKSUM_ERROR_MESSAGE = 'Pool Code checksum does not match. Did you copy the full message?';
+        const CONVERT_ERROR_MESSAGE = 'Could not convert this text.';
         const MAX_POOL_CODE_BYTE_LENGTH = 8192;
         const MAX_POOL_CODE_TOKEN_LENGTH = 20000;
         const GOLDEN_SPLASH_CHANCE = 0.01;
@@ -401,10 +402,10 @@
         const poolAlphabetBase24 = ['-', '/', ':', ';', '@', '"', '.', ',', '?', '!', '\'', '[', ']', '{', '}', '#', '%', '•', '§', '¿', '&', '·', '…', '¡'];
         const poolAlphabetBase54 = ['-', '/', ':', ';', '@', '"', '.', ',', '?', '!', '\'', '[', ']', '{', '}', '#', '%', '•', '§', '¿', '&', '·', '…', '¡', '†', '¶', '‡', '‽', '«', '»', '‹', '›', '※', '⸮', '⁈', '⁋', '⁂', '⁘', '⁇', '⁙', '⹂', '゠', '⸱', '⸲', '⸳', '⁕', '⸸', '⹁', '⹃', '⹅', '⹇', '⹉', '⹋', '⹍'];
         const poolAlphabetBase828 = Array.from([
-          "!\"#%&',-./:;?@[]{}¡§«¶·»¿;·՚՛՜՝՞՟։֊־׀׃׆׳״؉؊،؍؛؝؞؟٪٫٬٭۔܀܁܂܃܄܅܆܇܈܉܊܋܌܍߷߸߹࠰࠱࠲࠳࠴࠵࠶࠷࠸࠹࠺࠻࠼࠽࠾࡞।॥॰",
+          "!\"#%&',-./:;?@[]{}¡§«¶·»¿;·՚՛՜՝՞՟։֊־׀׃׆׳״؉؊،؍؛؝؞؟٪٫٬٭۔܀܁܂܃܄܅܆܇܈܉܊܋܌܍߷߸߹࠰࠱࠲࠳࠴࠵࠶࠷࠸࠹࠺࠻࠼࠽࠾࡞।॥॰",
           "৽੶૰౷಄෴๏๚๛༄༅༆༇༈༉༊་༌།༎༏༐༑༒༔༺༻༼༽྅࿐࿑࿒࿓࿔࿙࿚၊။၌၍၎၏჻፠፡።፣፤፥፦፧፨᐀᙮᚛᚜᛫᛬᛭᜵᜶។៕៖៘៙៚᠀᠁᠂᠃᠄᠅᠆᠇᠈᠉᠊᥄᥅᨞᨟᪠᪡᪢᪣᪤᪥᪦",
           "᪨᪩᪪᪫᪬᪭᭚᭛᭜᭝᭞᭟᭠᯼᯽᯾᯿᰻᰼᰽᰾᰿᱾᱿᳀᳁᳂᳃᳄᳅᳆᳇᳓‐‑‒–—―‖‗‘’‚‛“”„‟†‡•‣․‥…‧‰‱′″‴‵‶‷‸‹›※‼‽‾‿⁀⁁⁂⁃⁅⁆⁇⁈⁉⁊⁋⁌⁍⁎⁏⁐⁑",
-          "⁓⁔⁕⁖⁗⁘⁙⁚⁛⁜⁝⁞⁽⁾₍₎⌈⌉⌊⌋〈〉❨❩❪❫❬❭❮❯❰❱❲❳❴❵⟅⟆⟦⟧⟨⟩⟪⟫⟬⟭⟮⟯⦃⦄⦅⦆⦇⦈⦉⦊⦋⦌⦍⦎⦏⦐⦑⦒⦓⦔⦕⦖⦗⦘⧘⧙⧚⧛⧼⧽⳹⳺⳻⳼⳾⳿⵰⸀⸁⸂⸃⸄⸅⸆",
+          "⁓⁔⁕⁖⁗⁘⁙⁚⁛⁜⁝⁞⁽⁾₍₎⌈⌉⌊⌋〈〉❨❩❪❫❬❭❮❯❰❱❲❳❴❵⟅⟆⟦⟧⟨⟩⟪⟫⟬⟭⟮⟯⦃⦄⦅⦆⦇⦈⦉⦊⦋⦌⦍⦎⦏⦐⦑⦒⦓⦔⦕⦖⦗⦘⧘⧙⧚⧛⧼⧽⳹⳺⳻⳼⳾⳿⵰⸀⸁⸂⸃⸄⸅⸆",
           "⸇⸈⸉⸊⸋⸌⸍⸎⸏⸐⸑⸒⸓⸔⸕⸖⸗⸘⸙⸚⸛⸜⸝⸞⸟⸠⸡⸢⸣⸤⸥⸦⸧⸨⸩⸪⸫⸬⸭⸮⸰⸱⸲⸳⸴⸵⸶⸷⸸⸹⸼⸽⸾⸿⹀⹁⹂⹃⹄⹅⹆⹇⹈⹉⹊⹋⹌⹍⹎⹏⹒⹓⹔⹕⹖⹗⹘⹙⹚⹛⹜⹝、。〃〈〉《》「",
           "」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〽゠・꓾꓿꘍꘎꘏꙳꙾꛲꛳꛴꛵꛶꛷꡴꡵꡶꡷꣎꣏꣸꣹꣺꣼꤮꤯꥟꧆꧇꧈꧉꧊꧋꧌꧍꧞꧟꩜꩝꩞꩟꫞꫟꫰꫱꯫﴾﴿︐︑︒︓︔︕︖︗︘︙︰︱︲︳︴︵︶︷︸︹︺︻",
           "︼︽︾︿﹀﹁﹂﹃﹄﹅﹆﹇﹈﹉﹊﹋﹌﹍﹎﹏﹐﹑﹒﹔﹕﹖﹗﹘﹙﹚﹛﹜﹝﹞﹟﹠﹡﹣﹨﹪﹫！＂＃％＆＇（）＊，－．／：；？＠［＼］＿｛｝｟｠｡｢｣､･𐄀𐄁𐄂𐎟𐏐𐕯𐡗𐤟𐤿𐩐𐩑𐩒𐩓𐩔𐩕𐩖𐩗𐩘𐩿",
@@ -965,15 +966,23 @@
           return normalizedMessage === INVALID_POOL_CODE_MESSAGE || normalizedMessage === POOL_CODE_CHECKSUM_ERROR_MESSAGE;
         }
 
+        function localizeMessage(message) {
+          const t = translations[currentLang];
+          return message
+            .replace(INVALID_POOL_CODE_MESSAGE, t.invalidPoolCode)
+            .replace(POOL_CODE_CHECKSUM_ERROR_MESSAGE, t.checksumError)
+            .replace(CONVERT_ERROR_MESSAGE, t.convertError);
+        }
+
         function appendOutputMessage(message) {
           if (!isOutputErrorMessage(message)) {
-            outputText.append(document.createTextNode(message));
+            outputText.append(document.createTextNode(localizeMessage(message)));
             return;
           }
 
           const errorSpan = document.createElement('span');
           errorSpan.className = 'output-error';
-          errorSpan.textContent = message;
+          errorSpan.textContent = localizeMessage(message);
           outputText.append(errorSpan);
         }
 
@@ -1026,7 +1035,7 @@
             setOutput(convertText(inputText.value));
           } catch (error) {
             console.error('Conversion failed.', error);
-            setOutput('Could not convert this text.');
+            setOutput(CONVERT_ERROR_MESSAGE);
           }
         }
 
@@ -1070,6 +1079,9 @@
                 outputPlaceholder: "Result appears here",
                 copyButton: "Copy Output",
                 clearButton: "Clear",
+                invalidPoolCode: "Invalid or incomplete Pool Code.",
+                checksumError: "Pool Code checksum does not match. Did you copy the full message?",
+                convertError: "Could not convert this text.",
                 credits: `Made with ❤️ by <a href="https://linktr.ee/sacr1f1ce" target="_blank" rel="noopener">sacr1f1ce</a> &amp; <a href="https://github.com/tictac09" target="_blank" rel="noopener">tictac</a>`,
                 twitch: `Follow <a href="https://twitch.tv/itboji" target="_blank" rel="noopener">itboji</a> on Twitch!`,
                 modalTitle: "About Pool Code Translator",
@@ -1087,6 +1099,9 @@
                 outputPlaceholder: "結果がここに表示されます",
                 copyButton: "出力をコピー",
                 clearButton: "クリア",
+                invalidPoolCode: "無効または不完全なPoolコードです。",
+                checksumError: "Poolコードのチェックサムが一致しません。メッセージ全体をコピーしましたか？",
+                convertError: "このテキストを変換できませんでした。",
                 credits: `<a href="https://linktr.ee/sacr1f1ce" target="_blank" rel="noopener">sacr1f1ce</a> &amp; <a href="https://github.com/tictac09" target="_blank" rel="noopener">tictac</a> が❤️を込めて制作`,
                 twitch: `Twitchで <a href="https://twitch.tv/itboji" target="_blank" rel="noopener">itboji</a> をフォロー！`,
                 modalTitle: "Poolコード翻訳機とは？",
@@ -1155,6 +1170,7 @@
             document.getElementById('twitch').innerHTML = t.twitch;
 
             applyTheme(lang);
+            renderOutput(outputValue);
         }
 
         function clearAll() {
